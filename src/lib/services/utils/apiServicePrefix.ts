@@ -1,0 +1,11 @@
+const API_SERVICE_PREFIX = {
+    auth: '/api/authen',
+    user: '/api/user',
+    switchRestaurant: '/api/shop',
+    tableArea: '/api/tablearea',
+    area: '/api/areas',
+    table: '/api/tables',
+    tableDish: '/api/ordertabledish'
+}
+
+export default API_SERVICE_PREFIX;
