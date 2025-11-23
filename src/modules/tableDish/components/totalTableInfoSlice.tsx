@@ -1,24 +1,22 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import {
-    View,
-    Dimensions,
-    StyleSheet,
-    TouchableWithoutFeedback,
-    Animated,
-    Easing,
-} from 'react-native';
-import { Avatar, Button, Drawer, Surface } from 'react-native-paper';
-import { useDispatch, useSelector, shallowEqual } from 'react-redux';
-import { AppDispatch, RootState } from '@/stores';
-import areaAction from '@/stores/areaStore/areaThunk';
-import { useTableAreaWebsocket } from '@/websocket/wstablearea';
-import { Text } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ITableDishData } from '@/interfaces/tabledish/tabledishType';
+import { images } from '@/assets/images';
+import { useGetAreaDataQuery } from '@/lib/services/modules/area';
+import { ITableDishData } from '@/lib/services/modules/tableDish/type';
 import { MaterialIcons } from '@expo/vector-icons';
+import { format } from 'date-fns';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+    Animated,
+    Dimensions,
+    Easing,
+    StyleSheet,
+    Text,
+    TouchableWithoutFeedback,
+    View,
+} from 'react-native';
+import { Avatar, Surface } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 const screenWidth = Dimensions.get('window').width;
 const drawerWidth = screenWidth * 0.7;
-import { format } from 'date-fns';
 type Props = {
     visible: boolean;
     table: ITableDishData
@@ -43,8 +41,8 @@ const formatDuration = (seconds: number) => {
 
 const TotalTableInfoSlice = ({ visible, onClose, table }: Props) => {
     const slideAnim = useRef(new Animated.Value(-drawerWidth)).current;
-    const dispatch = useDispatch<AppDispatch>();
-
+    // const dispatch = useDispatch<AppDispatch>();
+    const {data : areaData} = useGetAreaDataQuery()
     const [isDrawerVisible, setDrawerVisible] = useState(false);
 
     const [duration, setDuration] = useState(0);
@@ -64,9 +62,10 @@ const TotalTableInfoSlice = ({ visible, onClose, table }: Props) => {
         }
     }, [table.timeStart]);
 
-    useEffect(() => {
-        dispatch(areaAction.getAreaData());
-    }, [dispatch]);
+    // useEffect(() => {
+    //     dispatch(areaAction.getAreaData());
+    // }, [dispatch]);
+
     useEffect(() => {
         if (visible) {
             setDrawerVisible(true);
@@ -128,7 +127,7 @@ const TotalTableInfoSlice = ({ visible, onClose, table }: Props) => {
                             style={{
                                 backgroundColor: 'trans'
                             }}
-                            size={130} source={require('@/assets/logo1.png')} />
+                            size={130} source={images.logo} />
                     </View>
                     <View>
                         <Surface style={styles.card} elevation={4}>

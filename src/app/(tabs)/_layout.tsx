@@ -10,15 +10,13 @@ const _LayoutTabs = () => {
         >
             {
                 ROUTE_TABS.map(route => (
-                    // <InnerMyPage>
-                        <Tabs.Screen
-                            key={route.name}
-                            name={route.name}
-                            options={{
-                                title: route.icon,
-                            }}
-                        />
-                    // </InnerMyPage>
+                    <Tabs.Screen
+                        key={route.name}
+                        name={route.name}
+                        options={{
+                            title: route.icon,
+                        }}
+                    />
                 ))
             }
         </Tabs>

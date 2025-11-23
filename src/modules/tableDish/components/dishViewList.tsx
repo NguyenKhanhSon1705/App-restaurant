@@ -1,16 +1,17 @@
-import { IDishData } from '@/interfaces/dish/dishType';
-import { IDish } from '@/interfaces/tabledish/tabledishType';
-import formatCurrency from '@/utils/functions/formatCurrency';
-import React, { useEffect, useRef, useState } from 'react';
+import { images } from '@/assets/images';
+import { formatCurrencyVN } from '@/common/utils';
+import { IDish } from '@/lib/services/modules/tableDish/type';
+import React, { useState } from 'react';
 import {
     FlatList,
-    Text,
-    View,
     Image,
-    TouchableOpacity,
     StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { Button } from 'react-native-paper';
+import { IDishData } from './tableDish.type';
 
 interface Props {
     data: IDishData;
@@ -57,14 +58,14 @@ const DishViewList: React.FC<Props> = ({ data, onSubmit, onIsScrollEnd }) => {
                                 source={
                                     item.image
                                         ? { uri: item.image }
-                                        : require('@/assets/avatar-default.png')
+                                        : images.avt_default
                                 }
                                 style={styles.image}
                             />
                             <View style={styles.infoContainer}>
                                 <Text style={styles.dishName}>{item.dish_Name}</Text>
                                 <Text style={styles.unitName}>{item.unit_Name}</Text>
-                                <Text style={styles.price}>{formatCurrency.formatCurrencyVN(item.selling_Price)} đ</Text>
+                                <Text style={styles.price}>{formatCurrencyVN(item.selling_Price)} đ</Text>
                             </View>
                         </TouchableOpacity>
                     );

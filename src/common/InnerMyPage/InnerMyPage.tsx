@@ -12,13 +12,13 @@ interface IInnerAppProps {
 export default function InnerMyPage({ children }: IInnerAppProps) {
   const authState = useAppSelector((state) => state.auth);
   const { isAuthenticated, token } = authState;
-
-  const { isFetching } = useFetchCurrentUserQuery(null, {
-    skip: !(isAuthenticated && token.accessToken !== ''),
-    refetchOnMountOrArgChange: true,
+  const { isFetching, data} = useFetchCurrentUserQuery(null, {
+    // skip: !(isAuthenticated && token.accessToken !== ''),
+    // refetchOnMountOrArgChange: true,
   }); 
 
 
+  console.log('InnerMyPage - isFetching:', data);
   if (isFetching || !(isAuthenticated && token.accessToken !== '')) {
     return <Loading />;
   }

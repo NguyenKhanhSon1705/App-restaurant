@@ -1,3 +1,8 @@
+import { images } from "@/assets/images";
+import { IUser } from "@/common/types";
+import { UIButtonBack } from "@/core/ui";
+import { useAppSelector } from "@/lib/hooks";
+import { RootState } from "@/lib/services/store";
 import { ROUTE } from "@/routers";
 import { AntDesign, Feather, FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -52,7 +57,7 @@ const menuItems = [
 ];
 export default function SettingPage() {
     const router = useRouter()
-
+    const user = useAppSelector((state:RootState) => state.user.user) as IUser
     const handleclickItem = (key: number) => {
         console.log(`Item clicked: ${key}`);
         switch (key) {
@@ -89,17 +94,15 @@ export default function SettingPage() {
     return (
         <ScrollView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity
-                    onPress={() => router.back()}
-                ><Ionicons name="arrow-back" size={24} /></TouchableOpacity>
+                <UIButtonBack />
                 <Text style={styles.headerText}>Profile</Text>
                 <TouchableOpacity><Feather name="more-horizontal" size={24} /></TouchableOpacity>
             </View>
 
             <View style={styles.profileContainer}>
-                <Avatar.Image size={80} source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }} style={styles.avatar} />
-                <Text style={styles.name}>Vishal Khadok</Text>
-                <Text style={styles.subtitle}>I love fast food</Text>
+                <Avatar.Image size={80} source={user.picture || images.avt_default} style={styles.avatar} />
+                <Text style={styles.name}>{user.fullName || "Chưa đặt tên"}</Text>
+                <Text style={styles.subtitle}>{user.email}</Text>
             </View>
 
             <View style={styles.menuWrapper}>

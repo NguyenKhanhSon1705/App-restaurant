@@ -1,7 +1,7 @@
-import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
-import type { IUserState } from "./type";
 import type { IUser } from "@/common/types";
 import { userApi } from "@/lib/services/modules";
+import { type PayloadAction, createSlice } from "@reduxjs/toolkit";
+import type { IUserState } from "./type";
 
 const initialState: IUserState = {
   user: undefined,
@@ -16,8 +16,8 @@ export const userSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addMatcher(userApi.endpoints.fetchCurrentUser.matchFulfilled, (state, action: PayloadAction<IUser>) => {
-      state.user = action.payload;
+    builder.addMatcher(userApi.endpoints.fetchCurrentUser.matchFulfilled, (state, action) => {
+      state.user = action.payload.data as IUser;
     });
   },
 });

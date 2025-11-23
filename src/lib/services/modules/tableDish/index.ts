@@ -8,7 +8,7 @@ const tableDish = API_SERVICE_PREFIX.tableDish;
 
 export const tableApi = apiSlice.injectEndpoints({
     endpoints: (build) => ({
-        getTableDishData: build.query<IApiResponse<ITableDishData[]>, number>({
+        getTableDishData: build.query<IApiResponse<ITableDishData>, number>({
             query: (body) => ({
                 url: `${tableDish}/get-dish-table?tableId=${body}`,
                 method: 'GET'
@@ -54,4 +54,9 @@ export const tableApi = apiSlice.injectEndpoints({
 });
 
 export const {
+    useGetTableDishDataQuery,
+    useLazyGetTableDishDataQuery,
+    useUpdateTableDishMutation,
+    useCreateTableDishMutation,
+    useAbortTableDishMutation
 } = tableApi;

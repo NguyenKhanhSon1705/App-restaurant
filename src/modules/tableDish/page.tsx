@@ -1,10 +1,591 @@
-import { View } from "react-native";
+import { images } from "@/assets/images";
+import { formatCurrencyVN } from "@/common/utils";
+import { UIButtonBack } from "@/core/ui";
+import { useAbortTableDishMutation, useCreateTableDishMutation, useGetTableDishDataQuery, useUpdateTableDishMutation } from "@/lib/services/modules/tableDish";
+import { IDish, ITableDishData } from "@/lib/services/modules/tableDish/type";
+import { ROUTE } from "@/routers";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
+import * as Animatable from "react-native-animatable";
+import { Button, IconButton } from "react-native-paper";
+import { SwipeListView } from "react-native-swipe-list-view";
+import Toast from "react-native-toast-message";
+import styled from "styled-components/native";
+import Dishmodal from "./components/dishmodal";
+import TotalTableInfoSlice from "./components/totalTableInfoSlice";
 
-export default function TableDishPage () {
+export default function TableDishPage() {
+    const [foods, setFoods] = useState<IDish[] | []>([]);
+    const [modalDishVisible, setModalDishVisible] = useState(false);
+    const [modalTotalTableInfoSlice, setModalTotalTableInfoSlice] = useState(false);
+    const { tableName, tableId } = useLocalSearchParams();
+    const [abortModalVisible, setAbortModalVisible] = useState(false);
+    const [abortReason, setAbortReason] = useState("");
+    const router = useRouter();
+    const [updateTableDish] = useUpdateTableDishMutation()
+    const [createTableDish] = useCreateTableDishMutation()
+    const [abortTableDish] = useAbortTableDishMutation()
+    const { data, refetch } = useGetTableDishDataQuery(Number(tableId), {
+        skip: !tableId,
+    });
+    useFocusEffect(
+        useCallback(() => {
+            refetch()
+        }, [refetch])
+    );
+    useEffect(() => {
+        setFoods(data?.data?.dish || []);
+    }, [data?.data?.dish]);
+
+    const handleDelete = (rowKey: string) => {
+        Alert.alert("Xóa món ăn", "Bạn có chắc chắn muốn xóa món ăn này?",
+            [
+                {
+                    text: "Hủy",
+                    style: "cancel",
+                },
+                {
+                    text: "Xóa",
+                    onPress: () => {
+                        setFoods((prev: IDish[] | undefined) => prev ? prev.filter((item) => item.id !== Number(rowKey)) : []);
+                    },
+                },
+            ],
+            { cancelable: false }
+
+        )
+    };
+
+    const handleQuantityChange = (id: number, newQuantity: number) => {
+        setFoods((prevFoods) =>
+            prevFoods?.map((food) =>
+                food.id === id ? { ...food, quantity: newQuantity } : food
+            )
+        );
+    };
+    const handleAdddish = () => {
+        setModalDishVisible(true)
+    }
+
+    const handleUpdate = () => {
+        Alert.alert(
+            "Xác nhận",
+            "Bạn có muốn cập nhật bàn này không?",
+            [
+                {
+                    text: "Không",
+                    style: "cancel",
+                },
+                {
+                    text: "Có",
+                    onPress: async () => {
+                        try {
+                            console.log("foods");
+                            const res = await updateTableDish({
+                                tableId: Number(tableId),
+                                listDishId: foods.map((food) => ({
+                                    key: food.id,
+                                    selling_Price: food.selling_Price,
+                                    quantity: food.quantity,
+                                    notes: "TODO"
+                                }))
+                            }).unwrap()
+                            if (res.isSuccess) {
+                                Toast.show({
+                                    type: "success",
+                                    text1: "Thành công",
+                                    text2: "Cập nhật món ăn thành công"
+                                })
+                            }
+                        } catch (err) {
+                            console.log("err", err);
+                            Toast.show({
+                                type: "error",
+                                text1: "Thất bại",
+                                text2: "Cập nhật món ăn thất bại"
+                            })
+                        }
+
+                        // dispatch(
+                        //     tabledishAction.updateTableDish({
+                        //         tableId: Number(tableId),
+                        //         listDishId: foods.map((food) => ({
+                        //             key: food.id,
+                        //             selling_Price: food.selling_Price,
+                        //             quantity: food.quantity,
+                        //             notes: "TODO"
+                        //         }))
+                        //     })
+                        // );
+                    },
+                },
+            ],
+            { cancelable: false }
+        );
+    }
+    const handleCreate = () => {
+        Alert.alert(
+            "Xác nhận",
+            "Bạn có muốn thêm bàn này không?",
+            [
+                {
+                    text: "Không",
+                    style: "cancel",
+                },
+                {
+                    text: "Có",
+                    onPress: async () => {
+                        try {
+                            const res = await createTableDish({
+                                tableId: Number(tableId),
+                                listDishId: foods.map((food) => ({
+                                    key: food.id,
+                                    selling_Price: food.selling_Price,
+                                    quantity: food.quantity,
+                                    notes: "food.notes"
+                                }))
+                            }).unwrap()
+
+                            if (res.isSuccess) {
+                                Toast.show({
+                                    type: "success",
+                                    text1: "Thành công",
+                                    text2: "Tạo bàn thành công"
+                                })
+                            }
+                        }
+                        catch (err) {
+                            console.log("err", err);
+                            Toast.show({
+                                type: "error",
+                                text1: "Thất bại",
+                                text2: "Tạo bàn thất bại"
+                            })
+                        }
+                        // setIsBtnUpdate(true);
+                        // dispatch(
+                        //     tabledishAction.createTableDish({
+                        //         tableId: Number(tableId),
+                        //         listDishId: foods.map((food) => ({
+                        //             key: food.id,
+                        //             selling_Price: food.selling_Price,
+                        //             quantity: food.quantity,
+                        //             notes: "food.notes"
+                        //         }))
+                        //     })
+                        // );
+                    },
+                },
+            ],
+            { cancelable: false }
+        );
+    }
+    const handleChangeTable = () => {
+
+    }
+    const handleAbortTable = () => {
+        setAbortModalVisible(true);
+    }
+
+    const handlePayment = () => {
+
+    };
+    const handleConfirmAbort = async () => {
+        setAbortModalVisible(false);
+        console.log("abortReason");
+        try {
+            const res = await abortTableDish({
+                table_Id: Number(tableId),
+                reason_abort: abortReason,
+                total_money: foods.reduce((total, food) => total + food.selling_Price * food.quantity, 0),
+                total_quantity: foods.reduce((total, food) => total + food.quantity, 0),
+            }).unwrap();
+            console.log("abortReason", res);
+
+            if (res.isSuccess) {
+                Toast.show({
+                    type: "success",
+                    text1: "Thành công",
+                    text2: "Hủy bàn thành công"
+                })
+                router.replace(ROUTE.TABLE_AREA)
+
+            }
+        } catch (err) {
+            console.log("err", err);
+            Toast.show({
+                type: "error",
+                text1: "Thất bại",
+                text2: "Hủy bàn thất bại"
+            })
+        }
+        // dispatch(
+        //     tabledishAction.abortTableDish({
+        //         table_Id: Number(tableId),
+        //         reason_abort: abortReason,
+        //         total_money: foods.reduce((total, food) => total + food.selling_Price * food.quantity, 0),
+        //         total_quantity: foods.reduce((total, food) => total + food.quantity, 0),
+        //     })
+        // );
+    };
+    const renderButton = (label: any, icon: any, backgroundColor: any, onPress: any, isDisable: boolean) => (
+        <ButtonCustom
+            mode="contained"
+            icon={icon}
+            style={{ backgroundColor }}
+            textColor="#fff"
+            contentStyle={{ justifyContent: 'flex-start' }}
+            onPress={onPress}
+            disabled={isDisable}
+        >
+            {label}
+        </ButtonCustom>
+    );
 
     return (
-        <View>
-            
-        </View>
+        <Container>
+            <Modal
+                visible={abortModalVisible}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setAbortModalVisible(false)}
+            >
+                <View style={{
+                    flex: 1,
+                    backgroundColor: "rgba(0,0,0,0.3)",
+                    justifyContent: "center",
+                    alignItems: "center"
+                }}>
+                    <View style={{
+                        backgroundColor: "#fff",
+                        padding: 20,
+                        borderRadius: 10,
+                        width: "80%"
+                    }}>
+                        <Text style={{ fontWeight: "bold", fontSize: 16, marginBottom: 10 }}>Nhập lý do hủy bàn</Text>
+                        <TextInput
+                            placeholder="Nhập lý do..."
+                            value={abortReason}
+                            onChangeText={setAbortReason}
+                            style={{
+                                borderWidth: 1,
+                                borderColor: "#ccc",
+                                borderRadius: 6,
+                                padding: 8,
+                                marginBottom: 16
+                            }}
+                        />
+                        <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
+                            <Button onPress={() => setAbortModalVisible(false)}>Đóng</Button>
+                            <Button
+                                onPress={handleConfirmAbort}
+                                disabled={!abortReason.trim()}
+                            >Xác nhận</Button>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+
+            {/* {loading && <Loading message="Đang tải..." />} */}
+            <View
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                }}
+            >
+                <View
+                    style={{
+                        marginLeft: 12
+                    }}
+                ><UIButtonBack />
+                </View>
+                <Text style={{
+                    textAlign: "center",
+                    fontSize: 18,
+                    fontWeight: "bold",
+                    flex: 1,
+                }}>
+                    {tableName} <Text style={{ color: "#ccc" }}>- {data?.data?.areaName}</Text>
+                </Text>
+                <View
+                    style={{
+                        marginRight: 12
+                    }}
+                >
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: "#f1f3f6",
+                            width: 36,
+                            height: 36,
+                            borderRadius: 50,
+                            justifyContent: "center",
+                            alignItems: "center",
+                            shadowColor: "#000",
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.1,
+                            shadowRadius: 2,
+                            margin: 10,
+                            elevation: 3,
+                        }}
+                        onPress={() => setModalTotalTableInfoSlice(true)}
+                    >
+                        <MaterialIcons name="menu" size={20} color="#2c2c2c" />
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            <View
+                style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: 10,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#ccc",
+                }}
+            >
+                <ButtonCustom
+                    mode="contained"
+                    icon={"plus"}
+                    style={{
+                        backgroundColor: "#07b80d",
+                    }}
+                    textColor="#fff"
+                    contentStyle={{ justifyContent: 'flex-start' }}
+                    onPress={handleAdddish}
+                >Thêm</ButtonCustom>
+            </View>
+            <SwipeListView
+                data={foods}
+                keyExtractor={(item) => item.id.toString() ?? item.dish_Name}
+                renderItem={({ item }) => (
+                    <FoodCard
+                    // animation="fadeInUp" duration={400}
+                    >
+                        <FoodImage
+                            source={
+                                item.image
+                                    ? { uri: item.image }
+                                    : images.avt_default
+                            }
+                        />
+                        <Info>
+                            <FoodName>{item.dish_Name}</FoodName>
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    alignSelf: "flex-end",
+                                }}
+                            >
+                                <IconButton
+                                    icon="minus"
+                                    size={20}
+                                    onPress={() => handleQuantityChange(item.id, Math.max(item.quantity - 1, 1))}
+                                />
+                                <TextInput
+                                    value={item.quantity.toString() ?? ""}
+                                    keyboardType="numeric"
+                                    onChangeText={(value) => handleQuantityChange(item.id, Math.max(Number(value), 1))}
+                                    style={{
+                                        width: 50,
+                                        height: 40,
+                                        textAlign: "center",
+                                        borderWidth: 1,
+                                        borderColor: "#ccc",
+                                        borderRadius: 4,
+                                    }}
+                                />
+                                <IconButton
+                                    icon="plus"
+                                    size={20}
+                                    onPress={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                />
+                            </View>
+                            <PriceRating>
+                                <Rating>⭐ 4.9 (10 Review)</Rating>
+                                <Price>{formatCurrencyVN(item.selling_Price)} đ</Price>
+                            </PriceRating>
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                            }}>
+                            </View>
+                        </Info>
+                    </FoodCard>
+                )}
+                renderHiddenItem={({ item }) => (
+                    <HiddenRow>
+                        <Animatable.View animation="bounceIn" duration={500}>
+                            <IconButton
+                                icon="delete"
+                                iconColor="white"
+                                containerColor="#ff3b30"
+                                onPress={() => handleDelete(item.id.toString())}
+                            />
+                        </Animatable.View>
+                    </HiddenRow>
+                )}
+                rightOpenValue={-80}
+                disableRightSwipe
+                previewRowKey={"1"}
+                previewOpenValue={-40}
+                previewOpenDelay={300}
+            />
+            {
+                data?.data && <TotalTableInfoSlice
+                    table={data?.data as ITableDishData}
+                    visible={modalTotalTableInfoSlice}
+                    onClose={() => setModalTotalTableInfoSlice(false)}
+                />
+            }
+
+            <View
+                style={{
+                    height: 120,
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-around",
+                    alignItems: "center",
+                    padding: 6,
+                    borderWidth: 1,
+                    borderColor: "#ccc",
+                    backgroundColor: "#fff",
+                    borderTopLeftRadius: 30,
+                    borderTopRightRadius: 30,
+                    paddingBottom: 10,
+                    zIndex: 100
+                }}
+            >
+                <View>
+                    {
+                        data?.data?.isActive
+                            ? renderButton("Cập nhật", "plus", "#5CB338", handleUpdate, false)
+                            : renderButton("Tạo bàn", "plus", "#5CB338", handleCreate, false)
+                    }
+
+                    {renderButton("Chuyển bàn", "autorenew", "#FA812F", handleChangeTable, !data?.data?.isActive)}
+                </View>
+
+                <View>
+                    {renderButton("Thanh toán", "contactless-payment", "#4E71FF", handlePayment, !data?.data?.isActive)}
+                    {renderButton("Hủy bàn", "close", "#FF0B55", handleAbortTable, !data?.data?.isActive)}
+                </View>
+            </View>
+            <Dishmodal
+                visible={modalDishVisible}
+                onClose={() => setModalDishVisible(false)}
+                onItemPress={(items?: IDish[]) => {
+                    const newItems = items ?? [];
+
+                    setFoods(prevFoods => {
+                        const updatedFoods = [...prevFoods];
+
+                        for (const newItem of newItems) {
+                            const index = updatedFoods.findIndex(food => food.id === newItem.id);
+
+                            if (index !== -1) {
+                                // Món đã tồn tại → tăng quantity
+                                updatedFoods[index] = {
+                                    ...updatedFoods[index],
+                                    quantity: updatedFoods[index].quantity + 1,
+                                };
+                            } else {
+                                // Món chưa có → thêm mới với quantity = 1
+                                updatedFoods.push({
+                                    ...newItem,
+                                    quantity: 1,
+                                });
+                            }
+                        }
+
+                        return updatedFoods;
+                    });
+                }}
+
+            />
+
+        </Container>
     )
 }
+
+
+const Container = styled.View`
+  flex: 1;
+  background-color: #f2f2f2;
+  padding-top: 50px;
+`;
+const FoodCard = styled.View`
+  background-color: #fff;
+  flex-direction: row;
+  padding: 8px;
+  margin: 8px 16px;
+  border-radius: 10px;
+  border-color: #ccc;
+  border-width: 1px;
+  
+`;
+
+const FoodImage = styled.Image`
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  padding: 2px;
+`;
+
+const Info = styled.View`
+  flex: 1;
+  margin-left: 12px;
+`;
+
+const FoodName = styled.Text`
+  font-weight: bold;
+  font-size: 16px;
+  color: #333;
+`;
+
+const Tag = styled.Text`
+  font-size: 12px;
+  background-color: #ffe6e6;
+  color: #ff6b6b;
+  padding: 3px 8px;
+  border-radius: 6px;
+  align-self: flex-start;
+  margin-top: 4px;
+`;
+
+const PriceRating = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 6px;
+`;
+
+const Rating = styled.Text`
+  font-size: 13px;
+  color: #ff9800;
+`;
+
+const Price = styled.Text`
+  font-size: 14px;
+  font-weight: bold;
+  color: #f00909;
+`;
+
+const HiddenRow = styled.View`
+  align-items: flex-end;
+  justify-content: center;
+  flex: 1;
+  margin-right: 24px;
+`;
+const ButtonCustom = styled(Button)`
+    border-radius: 4px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+`

@@ -1,13 +1,14 @@
-interface IMember {
-  memberId: string;
-  memberName: string;
-  memberNameKana: string;
-  mediaId: string;
-}
+
 interface IUser {
   id: string;
   email: string;
-  member: IMember;
+  fullName: string;
+  picture?: string;
+  shopId?: number;
+  shopName?: string,
+  shopLogo?: string,
+  isActive: boolean
 }
  
 export type { IUser };
+

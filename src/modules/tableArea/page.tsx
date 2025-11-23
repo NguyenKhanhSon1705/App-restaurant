@@ -1,4 +1,7 @@
+import Loading from "@/app/loading";
 import { useGetTableAreaDataQuery } from "@/lib/services/modules";
+import { ROUTE } from "@/routers";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text } from "react-native";
 import { Button, Surface } from "react-native-paper";
@@ -7,15 +10,18 @@ import Area from "./components/area";
 import { ITableAreaData } from "./tableArea.type";
 
 export default function TableAreaPage() {
-    // const router = useRouter()
+    const router = useRouter()
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [activeArea, setActiveArea] = useState<{ areaId?: number; areaName?: string }>({});
-    const [refreshing, setRefreshing] = useState(false);
-    const {data} = useGetTableAreaDataQuery(activeArea.areaId)
+    const { data, refetch, isLoading } = useGetTableAreaDataQuery(activeArea.areaId)
     const handleOpenDrawer = useCallback(() => {
         setDrawerVisible(true);
     }, []);
-
+    useFocusEffect(
+        useCallback(() => {
+            refetch()
+        }, [refetch])
+    );
     const handleCloseDrawer = useCallback(() => {
         setDrawerVisible(false);
     }, []);
@@ -25,19 +31,20 @@ export default function TableAreaPage() {
     }, []);
 
     const handleSelectTable = (item: ITableAreaData) => {
-        // router.push({
-        //     pathname: "tabledish/tabledish",
-        //     params: { tableId: item.id, tableName: item.nameTable },
-        // });
+        router.push({
+            pathname: ROUTE.TABLE_DISH,
+            params: { tableId: item.id, tableName: item.nameTable },
+        });
     };
     const onRefresh = useCallback(() => {
         if (!activeArea.areaId) return;
-        setRefreshing(true);
+        refetch();
+        // setRefreshing(true);
     }, [activeArea.areaId]);
     return (
         <SafeAreaView style={{ flex: 1 }}>
             {
-                // loading && <Loading />
+                isLoading && <Loading />
             }
             <Button
                 style={{
@@ -60,7 +67,7 @@ export default function TableAreaPage() {
             <ScrollView
                 contentContainerStyle={styles.container}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    <RefreshControl refreshing={false} onRefresh={onRefresh} />
                 }
             >
                 {data?.data?.map((item: ITableAreaData, index: any) => (

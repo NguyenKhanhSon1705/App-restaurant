@@ -1,26 +1,24 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { images } from '@/assets/images';
+import { LoadingRotate } from '@/common/components';
+import useDebounce from '@/common/hooks/useDebouse';
+import { useGetAllDishQuery } from '@/lib/services/modules/dish';
+import { useGetMenuGroupInfoQuery } from '@/lib/services/modules/menuGroup';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-    View,
-    Dimensions,
-    StyleSheet,
-    TouchableWithoutFeedback,
     Animated,
+    Dimensions,
     Easing,
-    ScrollView,
     FlatList,
-    TouchableOpacity,
     Image,
+    StyleSheet,
     Text,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View
 } from 'react-native';
-import { Surface, Searchbar } from 'react-native-paper';
-import { useDispatch, useSelector, shallowEqual } from 'react-redux';
-import { AppDispatch, RootState } from '@/stores';
-import { IDishDTO, IMenuGroupInfo } from '@/interfaces/dish/dishType';
-import dishAction from '@/stores/dishStore/dishThunk';
-import useDebounce from '@/utils/hooks/useDebouse';
-import LoadingOverlay from '../loadingrotate';
+import { Searchbar, Surface } from 'react-native-paper';
 import DishViewList from './dishViewList';
-import { set } from 'date-fns';
+import { IDishData, IDishDTO, IMenuGroupInfo } from './tableDish.type';
 
 const screenHeight = Dimensions.get('window').height;
 const modalHeight = screenHeight * 0.78;
@@ -28,7 +26,7 @@ const modalHeight = screenHeight * 0.78;
 type Props = {
     visible: boolean;
     onClose: () => void;
-    onItemPress?: (item : any) => void;
+    onItemPress?: (item: any) => void;
 };
 
 /*
@@ -42,7 +40,7 @@ const HorizontalItem = ({ name, image }: IMenuGroupInfo) => (
             source={
                 image
                     ? { uri: image }
-                    : require('@/assets/avatar-default.png')
+                    : images.avt_default
             }
             style={styles.image}
         />
@@ -52,7 +50,7 @@ const HorizontalItem = ({ name, image }: IMenuGroupInfo) => (
 
 const DishModal = ({ visible, onClose, onItemPress }: Props) => {
     const slideAnim = useRef(new Animated.Value(modalHeight)).current;
-    const dispatch = useDispatch<AppDispatch>();
+    // const dispatch = useDispatch<AppDispatch>();
     const [searchQuery, setSearchQuery] = React.useState('');
     const [paramDish, setParamDish] = useState<IDishDTO>({
         pageIndex: 1,
@@ -65,20 +63,12 @@ const DishModal = ({ visible, onClose, onItemPress }: Props) => {
     const [isVisible, setIsVisible] = useState(false);
     const flatListRef = useRef<FlatList>(null);
     const [pageIndexCurrent, setPageIndexCurrent] = useState(2);
-
-    const { loading, dish, menuGroup, error } = useSelector(
-        (state: RootState) => state.dishStore as any,
-        shallowEqual
-    );
-
+    const { data: dish, isLoading} = useGetAllDishQuery(debouseParamDish)
+    const { data: menuGroup } = useGetMenuGroupInfoQuery()
+    
     useEffect(() => {
-        dispatch(dishAction.getMenuGroupInfo());
-    }, [dispatch]);
-
-    useEffect(() => {
-        dispatch(dishAction.getDishInfo(debouseParamDish));
         setPageIndexCurrent(2);
-    }, [dispatch, debouseParamDish]);
+    }, [debouseParamDish]);
 
     useEffect(() => {
         if (visible) {
@@ -106,9 +96,6 @@ const DishModal = ({ visible, onClose, onItemPress }: Props) => {
         setParamDish(prev => ({ ...prev, menuGroupId: selectedItemId }))
     }, [selectedItemId])
 
-    /*
-    description: handle event when user click toggle modal choose dish
-    */
     const handleBackdropPress = useCallback(() => {
         Animated.timing(slideAnim, {
             toValue: modalHeight,
@@ -121,11 +108,6 @@ const DishModal = ({ visible, onClose, onItemPress }: Props) => {
         });
     }, [onClose]);
 
-    /*
-   description: get data when user click item in menuGroup
-   @param id: number | id item menuGroup
-   @param index: number | index item menuGroup 
-   */
     const handleItemPress = (id: number, index: number) => {
         setSelectedItemId((prevSelectedId) =>
             prevSelectedId === id ? null : id
@@ -142,25 +124,14 @@ const DishModal = ({ visible, onClose, onItemPress }: Props) => {
     };
     if (!isVisible) return null;
 
-    /*
-    description: listen event scroll end in component DishViewList
-    @param isScrollEnd: boolean
-    */
     const handleScroll = (isScrollEnd: boolean) => {
         if (isScrollEnd) {
-            if (pageIndexCurrent <= dish?.totalPages) {
-                setPageIndexCurrent((prev) => {
-                    return prev + 1;
-                });
-                dispatch(dishAction.getDishInfoPaging({ ...paramDish, pageIndex: pageIndexCurrent }))
+            if (pageIndexCurrent <= (dish?.data?.totalPages ?? 0)) {
+                setPageIndexCurrent(prev => prev + 1);
             }
         }
     }
 
-    /*
-    description: get data when user click button submit
-    @param selectedItems: IDish[]
-    */
     const handleSubmit = (selectedItems: any) => {
         onItemPress && onItemPress(selectedItems);
         onClose();
@@ -169,7 +140,7 @@ const DishModal = ({ visible, onClose, onItemPress }: Props) => {
 
     return (
         <View style={styles.overlay}>
-            {loading && <LoadingOverlay />}
+            {isLoading && <LoadingRotate />}
             <TouchableWithoutFeedback onPress={handleBackdropPress}>
                 <View style={styles.backdrop} />
             </TouchableWithoutFeedback>
@@ -204,7 +175,7 @@ const DishModal = ({ visible, onClose, onItemPress }: Props) => {
                     >
                         <FlatList
                             ref={flatListRef}
-                            data={menuGroup}
+                            data={menuGroup?.data}
                             keyExtractor={(item) => `item-${item.id}`}
                             horizontal
                             showsHorizontalScrollIndicator={false}
@@ -225,7 +196,7 @@ const DishModal = ({ visible, onClose, onItemPress }: Props) => {
                     <View style={{ flex: 1 }}>
                         <DishViewList
                             onIsScrollEnd={isscroll => handleScroll(isscroll)}
-                            data={dish as any} onSubmit={handleSubmit}
+                            data={dish?.data as IDishData} onSubmit={handleSubmit}
                         />
                     </View>
                 </Surface>

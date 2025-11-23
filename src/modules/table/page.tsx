@@ -24,7 +24,6 @@ export default function TablePage() {
             refetch()
         }, [refetch])
     );
-    console.log(123)
     const openOptionsModal = (table: ITableData, event: any) => {
         const { pageX, pageY } = event.nativeEvent;
         setSelectedTable(table);

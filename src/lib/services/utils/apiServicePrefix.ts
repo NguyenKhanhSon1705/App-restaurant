@@ -5,7 +5,9 @@ const API_SERVICE_PREFIX = {
     tableArea: '/api/tablearea',
     area: '/api/areas',
     table: '/api/tables',
-    tableDish: '/api/ordertabledish'
+    tableDish: '/api/ordertabledish',
+    dish: '/api/dish',
+    menuGroup: '/api/menugroup'
 }
 
 export default API_SERVICE_PREFIX;
