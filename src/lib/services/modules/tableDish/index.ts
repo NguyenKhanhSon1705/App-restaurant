@@ -49,6 +49,13 @@ export const tableApi = apiSlice.injectEndpoints({
                 return { data: result.data as IApiResponse<ITableDishData> };
             },
         }),
+        switchTable: build.mutation<IApiResponse<any>, { currentTableId: number; targetTableId: number }>({
+            query: (body) => ({
+                url: `${tableDish}/update-table-id?oldTableId=${body.currentTableId}&newTableId=${body.targetTableId}`,
+                method: 'POST',
+            })
+        }),
+
 
     }),
 });
@@ -58,5 +65,6 @@ export const {
     useLazyGetTableDishDataQuery,
     useUpdateTableDishMutation,
     useCreateTableDishMutation,
-    useAbortTableDishMutation
+    useAbortTableDishMutation,
+    useSwitchTableMutation
 } = tableApi;

@@ -13,12 +13,10 @@ export const userApi = apiSlice.injectEndpoints({
     fetchCurrentUser: build.query<IApiResponse<IUser>, null>({
       async queryFn(data, _queryApi, _extraOptions, baseQuery) {
         const idShop = await getIdShopFromStorage();
-        console.log('idShop', idShop);
         const result = await baseQuery({
           url: `${user}/get-current-user?shopId=${idShop}`,
           method: 'GET',
         });
-        console.log('fetchCurrentUser - result:', result);
 
         if (result.error) return { error: result.error };
         return { data: result.data as IApiResponse<IUser> };

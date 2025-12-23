@@ -20,7 +20,7 @@ const baseQuery = fetchBaseQuery({
     const token = (getState() as RootState).auth.token;
     headers.set("current-version", "1.00");
     // THAY ĐỔI: Đổi client-type thành "mobile" hoặc "app" cho React Native
-    headers.set("client-type", "mobile"); 
+    headers.set("client-type", "mobile");
     headers.set("Content-Type", "application/json");
     headers.set("Accept-Encoding", "gzip, deflate");
     headers.set("Connection", "keep-alive");
@@ -76,7 +76,7 @@ const baseQueryWithInterceptor: BaseQueryFn<string | FetchArgs, unknown, FetchBa
           api.dispatch({ type: USER_LOGOUT });
           // XÓA BỎ: Không thể dùng window.location.href trong React Native
           // window.location.href = "/"; 
-          
+
           // GHI CHÚ: Việc điều hướng về màn hình Login nên được xử lý
           // ở tầng UI (ví dụ: trong App.tsx hoặc NavigationContainer)
           // bằng cách lắng nghe action USER_LOGOUT.

@@ -29,11 +29,6 @@ type Props = {
     onItemPress?: (item: any) => void;
 };
 
-/*
-    description: component render item in FlatList
-    @param name: string 
-    @param image: string
-*/
 const HorizontalItem = ({ name, image }: IMenuGroupInfo) => (
     <View style={styles.itemContainer}>
         <Image
@@ -50,11 +45,10 @@ const HorizontalItem = ({ name, image }: IMenuGroupInfo) => (
 
 const DishModal = ({ visible, onClose, onItemPress }: Props) => {
     const slideAnim = useRef(new Animated.Value(modalHeight)).current;
-    // const dispatch = useDispatch<AppDispatch>();
     const [searchQuery, setSearchQuery] = React.useState('');
     const [paramDish, setParamDish] = useState<IDishDTO>({
         pageIndex: 1,
-        pageSize: 6,
+        pageSize: 50,
         search: '',
         menuGroupId: null
     });
@@ -63,9 +57,9 @@ const DishModal = ({ visible, onClose, onItemPress }: Props) => {
     const [isVisible, setIsVisible] = useState(false);
     const flatListRef = useRef<FlatList>(null);
     const [pageIndexCurrent, setPageIndexCurrent] = useState(2);
-    const { data: dish, isLoading} = useGetAllDishQuery(debouseParamDish)
+    const { data: dish, isLoading } = useGetAllDishQuery(debouseParamDish)
     const { data: menuGroup } = useGetMenuGroupInfoQuery()
-    
+
     useEffect(() => {
         setPageIndexCurrent(2);
     }, [debouseParamDish]);
@@ -180,17 +174,19 @@ const DishModal = ({ visible, onClose, onItemPress }: Props) => {
                             horizontal
                             showsHorizontalScrollIndicator={false}
                             contentContainerStyle={{ paddingHorizontal: 10 }}
-                            renderItem={({ item, index }) => (
-                                <TouchableOpacity
-                                    style={[
-                                        styles.card,
-                                        selectedItemId === item.id && styles.selectedCard,
-                                    ]}
-                                    onPress={() => handleItemPress(item.id, index)}
-                                >
-                                    <HorizontalItem {...item} />
-                                </TouchableOpacity>
-                            )}
+                            renderItem={({ item, index }) => {
+                                return (
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.card,
+                                            selectedItemId === item.id && styles.selectedCard,
+                                        ]}
+                                        onPress={() => handleItemPress(item.id, index)}
+                                    >
+                                        <HorizontalItem {...item} />
+                                    </TouchableOpacity>
+                                )
+                            }}
                         />
                     </View>
                     <View style={{ flex: 1 }}>
@@ -203,7 +199,9 @@ const DishModal = ({ visible, onClose, onItemPress }: Props) => {
             </Animated.View>
         </View>
     );
-}; const styles = StyleSheet.create({
+};
+
+const styles = StyleSheet.create({
     overlay: {
         position: 'absolute',
         top: 0,

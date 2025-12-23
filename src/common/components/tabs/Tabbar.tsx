@@ -1,47 +1,34 @@
 import InnerMyPage from "@/common/InnerMyPage/InnerMyPage";
 import { ROUTE } from "@/routers";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
-import { Animated, Dimensions } from "react-native";
+import React from "react";
+import { Dimensions, StyleSheet } from "react-native";
 import styled from "styled-components/native";
 import TabbarBottonEven from "./TabbarBottomEven";
 
+// Floating Styled Container
 const Container = styled.View`
     position: absolute;
-    bottom: 0;
+    bottom: 25px; 
+    left: 20px;
+    right: 20px;
     flex-direction: row;
-    background-color: #fff;
-    padding: 25px 0 10px;
-    border-top-right-radius: 30px;
-    border-top-left-radius: 30px;
+    background-color: #ffffff;
+    padding: 10px 0;
+    border-radius: 25px;
+    align-items: center;
+    justify-content: space-around;
 `;
 
 const screenWidth = Dimensions.get("window").width;
 
 const TabBar: React.FC<any> = ({ state, descriptors, navigation }) => {
-    const tabWidth = screenWidth / state.routes.length;
-    const translateX = useRef(new Animated.Value(0)).current;
-    const indicatorWidth = tabWidth - 50;
-    const offset = (tabWidth - indicatorWidth) / 2;
     const router = useRouter()
-    useEffect(() => {
-        Animated.spring(translateX, {
-            toValue: state.index * tabWidth,
-            useNativeDriver: true,
-        }).start();
-    }, [state.index]);
 
     return (
         <InnerMyPage>
-            <Container
-                style={{
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 4.65,
-                    elevation: 8,
-                }}
-            >
+            {/* Transparent overlay to catch touches behind if needed, but for floating bar we can just have the bar */}
+            <Container style={styles.shadow}>
                 {state.routes.map((route: any, index: number) => {
                     const isFocus = state.index === index;
                     const { options } = descriptors[route.key];
@@ -74,30 +61,27 @@ const TabBar: React.FC<any> = ({ state, descriptors, navigation }) => {
                             routename={route.name}
                             key={route.key}
                             icon={options.title}
-                            color={isFocus ? "#ff7f30" : "#c6c6c6"}
+                            color={isFocus ? "#F97316" : "#9CA3AF"} // Brand Orange vs Gray
                             label={route.name}
+                            isFocused={isFocus}
                             onPress={onPress}
                         />
                     );
                 })}
-
-                {/* Indicator dưới tab */}
-                <Animated.View
-                    style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        height: 3,
-                        width: indicatorWidth,
-                        backgroundColor: "#ff7f30",
-                        borderRadius: 1,
-                        transform: [{ translateX: Animated.add(translateX, new Animated.Value(offset)) }],
-                    }}
-                />
             </Container>
         </InnerMyPage>
     );
 };
+
+const styles = StyleSheet.create({
+    shadow: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+        elevation: 10, // Android shadow
+    }
+});
 
 export { TabBar };
 

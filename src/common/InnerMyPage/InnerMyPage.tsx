@@ -16,9 +16,6 @@ export default function InnerMyPage({ children }: IInnerAppProps) {
     // skip: !(isAuthenticated && token.accessToken !== ''),
     // refetchOnMountOrArgChange: true,
   }); 
-
-
-  console.log('InnerMyPage - isFetching:', data);
   if (isFetching || !(isAuthenticated && token.accessToken !== '')) {
     return <Loading />;
   }

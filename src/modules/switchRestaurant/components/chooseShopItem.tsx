@@ -1,66 +1,9 @@
+import { MaterialIcons } from "@expo/vector-icons";
 import React, { FC, useState } from "react";
-import { Image, Text, TouchableOpacity } from "react-native";
-import { Button } from "react-native-paper";
-import styled from "styled-components/native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Surface } from "react-native-paper";
 import { IShopData } from "../switchRestaurant.type";
 import ShopOptionModal from "./ShopOptionModal";
-
-
-
-const Container =  styled.View`
-  padding: 12px;
-  background-color: #ffffff;
-  border-radius: 16px;
-  elevation: 4;
-  flex-direction: row;
-  align-items: center;
-  margin: 8px 16px;
-`;
-
-const ContainerAvt =  styled.View`
-  flex-direction: row;
-  align-items: center;
-`;
-
-const AvatarContainer =  styled.View`
-  width: 90px;
-  height: 90px;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-right: 12px;
-`;
-
-const ContainerInfo =  styled.View`
-  flex: 1;
-`;
-
-const InfoHeader =  styled.View`
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-`;
-
-const Tag = styled.Text`
-  background-color: #fce8e6;
-  color: #e53935;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
-  overflow: hidden;
-`;
-
-const Rating =  styled.View`
-  flex-direction: row;
-  align-items: center;
-`;
-
-const Star = styled.Text`
-  color: #fbc02d;
-  margin-right: 4px;
-  font-weight: bold;
-`;
 
 interface IPropsItem {
   propsItem: IShopData;
@@ -69,11 +12,11 @@ interface IPropsItem {
   onPressDelete?: (shop: IShopData) => void;
 }
 
-const ChooseShopItem: FC<IPropsItem> = ({ 
-  propsItem, 
+const ChooseShopItem: FC<IPropsItem> = ({
+  propsItem,
   onPressIdShop,
   onPressEdit,
-  onPressDelete 
+  onPressDelete
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalPosition, setModalPosition] = useState({ top: 0, left: 0 });
@@ -85,62 +28,41 @@ const ChooseShopItem: FC<IPropsItem> = ({
   };
 
   return (
-    <Container>
-      <ContainerAvt>
-        <AvatarContainer>
-          <Image
-            source={{ uri: propsItem.shopLogo }}
-            style={{ width: "100%", height: "100%" }}
-            resizeMode="cover"
-          />
-        </AvatarContainer>
+    <Surface style={styles.container} elevation={2}>
+      <TouchableOpacity
+        style={styles.touchableArea}
+        onPress={() => onPressIdShop(propsItem.id)}
+        activeOpacity={0.9}
+      >
+        <Image
+          source={propsItem.shopLogo ? { uri: propsItem.shopLogo } : require('@/assets/images/logo.png')} // Fallback image if needed, or handle in upper layer
+          style={styles.image}
+          resizeMode="cover"
+        />
 
-        <ContainerInfo>
-          {/* Tên cửa hàng */}
-          <InfoHeader>
-            <Text
-              style={{ fontWeight: "bold", fontSize: 16 }}
-              numberOfLines={1}
-            >
+        <View style={styles.infoContainer}>
+          <View style={styles.headerRow}>
+            <Text style={styles.shopName} numberOfLines={1}>
               {propsItem.shopName}
             </Text>
-            <TouchableOpacity onPress={handleShowOptions}>
-              <Text style={{ fontSize: 18, fontWeight: "bold", color: "#999" }}>
-                ...
-              </Text>
+            <TouchableOpacity onPress={handleShowOptions} hitSlop={10}>
+              <MaterialIcons name="more-vert" size={24} color="#9CA3AF" />
             </TouchableOpacity>
-          </InfoHeader>
+          </View>
 
-          {/* Tag + Giá */}
-          <InfoHeader>
-            {/* <Tag>Breakfast</Tag> */}
-            {/* <Text style={{ fontSize: 16, fontWeight: "bold", color: "#444" }}>
-              $60
-            </Text> */}
-          </InfoHeader>
+          <View style={styles.ratingRow}>
+            <MaterialIcons name="star" size={16} color="#FBBF24" />
+            <Text style={styles.ratingText}>4.9</Text>
+            <Text style={styles.reviewText}>(10+ Reviews)</Text>
+          </View>
 
-          {/* Đánh giá + Nút đi tới */}
-          <InfoHeader>
-            <Rating>
-              <Star>⭐ 4.9</Star>
-              <Text style={{ color: "#888" }}>(10 Review)</Text>
-            </Rating>
-            <Button
-              mode="outlined"
-              textColor="#ff8c47"
-              style={{
-                borderColor: "#ff8c47",
-                borderWidth: 1,
-                borderRadius: 4,
-                paddingHorizontal: 4,
-              }}
-              onPress={() => onPressIdShop(propsItem.id)}
-            >
-              Đi tới
-            </Button>
-          </InfoHeader>
-        </ContainerInfo>
-      </ContainerAvt>
+          {/* Optional: Add location or status if available in IShopData */}
+          <View style={styles.statusRow}>
+            <View style={styles.statusDot} />
+            <Text style={styles.statusText}>Đang hoạt động</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
 
       <ShopOptionModal
         visible={modalVisible}
@@ -155,8 +77,79 @@ const ChooseShopItem: FC<IPropsItem> = ({
         }}
         position={modalPosition}
       />
-    </Container>
+    </Surface>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+  },
+  touchableArea: {
+    flexDirection: 'row',
+    padding: 12,
+    alignItems: 'center',
+  },
+  image: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+  },
+  infoContainer: {
+    flex: 1,
+    marginLeft: 16,
+    justifyContent: 'center',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  shopName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    flex: 1,
+    marginRight: 8,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  ratingText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginLeft: 4,
+    marginRight: 4,
+  },
+  reviewText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22C55E',
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 12,
+    color: '#22C55E',
+    fontWeight: '500',
+  }
+});
 
 export default ChooseShopItem;

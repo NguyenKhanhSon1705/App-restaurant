@@ -1,5 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface TableOptionsModalProps {
   visible: boolean;
@@ -32,16 +33,25 @@ const TableOptionsModal: React.FC<TableOptionsModalProps> = ({
           style={[
             styles.modalContainer,
             {
-              top: position.top,
-              left: position.left - 100
+              top: position.top + 10,
+              left: position.left - 140
             }
           ]}
         >
           <TouchableOpacity style={styles.modalOption} onPress={onEdit}>
+            <View style={[styles.iconContainer, { backgroundColor: '#E0F2FE' }]}>
+              <Ionicons name="create-outline" size={18} color="#0284C7" />
+            </View>
             <Text style={styles.modalOptionText}>Sửa</Text>
           </TouchableOpacity>
+
+          <View style={styles.separator} />
+
           <TouchableOpacity style={styles.modalOption} onPress={onDelete}>
-            <Text style={styles.modalOptionText}>Xóa</Text>
+            <View style={[styles.iconContainer, { backgroundColor: '#FEE2E2' }]}>
+              <Ionicons name="trash-outline" size={18} color="#DC2626" />
+            </View>
+            <Text style={[styles.modalOptionText, styles.deleteText]}>Xóa</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -52,35 +62,48 @@ const TableOptionsModal: React.FC<TableOptionsModalProps> = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0
   },
   modalContainer: {
     position: 'absolute',
-    width: 120,
+    width: 150,
     backgroundColor: 'white',
-    borderRadius: 8,
+    borderRadius: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    paddingVertical: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#F3F4F6'
   },
   modalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0'
+    paddingHorizontal: 12,
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
   },
   modalOptionText: {
     fontSize: 14,
-    color: '#333',
-    textAlign: 'left'
+    fontWeight: '600',
+    color: '#374151',
   },
+  deleteText: {
+    color: '#DC2626',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 12,
+  }
 });
 
 export default TableOptionsModal;

@@ -1,61 +1,78 @@
 import { images } from "@/assets/images";
+import { LoadingRotate } from "@/common/components";
 import { formatCurrencyVN } from "@/common/utils";
 import { UIButtonBack } from "@/core/ui";
 import { useAbortTableDishMutation, useCreateTableDishMutation, useGetTableDishDataQuery, useUpdateTableDishMutation } from "@/lib/services/modules/tableDish";
 import { IDish, ITableDishData } from "@/lib/services/modules/tableDish/type";
 import { ROUTE } from "@/routers";
-import { MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
-import * as Animatable from "react-native-animatable";
-import { Button, IconButton } from "react-native-paper";
+import {
+    Alert,
+    Dimensions,
+    Image,
+    Modal,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from "react-native";
+import { Button, Surface } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { SwipeListView } from "react-native-swipe-list-view";
 import Toast from "react-native-toast-message";
-import styled from "styled-components/native";
 import Dishmodal from "./components/dishmodal";
+import SwitchTableModal from "./components/switchTableModal";
 import TotalTableInfoSlice from "./components/totalTableInfoSlice";
+
+const { width } = Dimensions.get("window");
 
 export default function TableDishPage() {
     const [foods, setFoods] = useState<IDish[] | []>([]);
     const [modalDishVisible, setModalDishVisible] = useState(false);
+    const [modalSwitchTableVisible, setModalSwitchTableVisible] = useState(false);
     const [modalTotalTableInfoSlice, setModalTotalTableInfoSlice] = useState(false);
     const { tableName, tableId } = useLocalSearchParams();
     const [abortModalVisible, setAbortModalVisible] = useState(false);
     const [abortReason, setAbortReason] = useState("");
     const router = useRouter();
-    const [updateTableDish] = useUpdateTableDishMutation()
-    const [createTableDish] = useCreateTableDishMutation()
-    const [abortTableDish] = useAbortTableDishMutation()
-    const { data, refetch } = useGetTableDishDataQuery(Number(tableId), {
+    const [updateTableDish] = useUpdateTableDishMutation();
+    const [createTableDish] = useCreateTableDishMutation();
+    const [abortTableDish] = useAbortTableDishMutation();
+    const { data, refetch, isLoading } = useGetTableDishDataQuery(Number(tableId), {
         skip: !tableId,
     });
+
     useFocusEffect(
         useCallback(() => {
-            refetch()
+            refetch();
         }, [refetch])
     );
+
     useEffect(() => {
         setFoods(data?.data?.dish || []);
     }, [data?.data?.dish]);
 
     const handleDelete = (rowKey: string) => {
-        Alert.alert("Xóa món ăn", "Bạn có chắc chắn muốn xóa món ăn này?",
+        Alert.alert(
+            "Xóa món ăn",
+            "Bạn có chắc chắn muốn xóa món ăn này?",
             [
-                {
-                    text: "Hủy",
-                    style: "cancel",
-                },
+                { text: "Hủy", style: "cancel" },
                 {
                     text: "Xóa",
+                    style: "destructive",
                     onPress: () => {
-                        setFoods((prev: IDish[] | undefined) => prev ? prev.filter((item) => item.id !== Number(rowKey)) : []);
+                        setFoods((prev: IDish[] | undefined) =>
+                            prev ? prev.filter((item) => item.id !== Number(rowKey)) : []
+                        );
                     },
                 },
             ],
             { cancelable: false }
-
-        )
+        );
     };
 
     const handleQuantityChange = (id: number, newQuantity: number) => {
@@ -65,75 +82,50 @@ export default function TableDishPage() {
             )
         );
     };
+
     const handleAdddish = () => {
-        setModalDishVisible(true)
-    }
+        setModalDishVisible(true);
+    };
 
     const handleUpdate = () => {
         Alert.alert(
             "Xác nhận",
             "Bạn có muốn cập nhật bàn này không?",
             [
-                {
-                    text: "Không",
-                    style: "cancel",
-                },
+                { text: "Không", style: "cancel" },
                 {
                     text: "Có",
                     onPress: async () => {
                         try {
-                            console.log("foods");
                             const res = await updateTableDish({
                                 tableId: Number(tableId),
                                 listDishId: foods.map((food) => ({
                                     key: food.id,
                                     selling_Price: food.selling_Price,
                                     quantity: food.quantity,
-                                    notes: "TODO"
-                                }))
-                            }).unwrap()
+                                    notes: "TODO",
+                                })),
+                            }).unwrap();
                             if (res.isSuccess) {
-                                Toast.show({
-                                    type: "success",
-                                    text1: "Thành công",
-                                    text2: "Cập nhật món ăn thành công"
-                                })
+                                Toast.show({ type: "success", text1: "Thành công", text2: "Cập nhật thành công" });
                             }
                         } catch (err) {
                             console.log("err", err);
-                            Toast.show({
-                                type: "error",
-                                text1: "Thất bại",
-                                text2: "Cập nhật món ăn thất bại"
-                            })
+                            Toast.show({ type: "error", text1: "Thất bại", text2: "Cập nhật thất bại" });
                         }
-
-                        // dispatch(
-                        //     tabledishAction.updateTableDish({
-                        //         tableId: Number(tableId),
-                        //         listDishId: foods.map((food) => ({
-                        //             key: food.id,
-                        //             selling_Price: food.selling_Price,
-                        //             quantity: food.quantity,
-                        //             notes: "TODO"
-                        //         }))
-                        //     })
-                        // );
                     },
                 },
             ],
             { cancelable: false }
         );
-    }
+    };
+
     const handleCreate = () => {
         Alert.alert(
             "Xác nhận",
             "Bạn có muốn thêm bàn này không?",
             [
-                {
-                    text: "Không",
-                    style: "cancel",
-                },
+                { text: "Không", style: "cancel" },
                 {
                     text: "Có",
                     onPress: async () => {
@@ -144,57 +136,39 @@ export default function TableDishPage() {
                                     key: food.id,
                                     selling_Price: food.selling_Price,
                                     quantity: food.quantity,
-                                    notes: "food.notes"
-                                }))
-                            }).unwrap()
+                                    notes: "food.notes",
+                                })),
+                            }).unwrap();
 
                             if (res.isSuccess) {
-                                Toast.show({
-                                    type: "success",
-                                    text1: "Thành công",
-                                    text2: "Tạo bàn thành công"
-                                })
+                                Toast.show({ type: "success", text1: "Thành công", text2: "Tạo bàn thành công" });
+                                refetch();
                             }
-                        }
-                        catch (err) {
+                        } catch (err) {
                             console.log("err", err);
-                            Toast.show({
-                                type: "error",
-                                text1: "Thất bại",
-                                text2: "Tạo bàn thất bại"
-                            })
+                            Toast.show({ type: "error", text1: "Thất bại", text2: "Tạo bàn thất bại" });
                         }
-                        // setIsBtnUpdate(true);
-                        // dispatch(
-                        //     tabledishAction.createTableDish({
-                        //         tableId: Number(tableId),
-                        //         listDishId: foods.map((food) => ({
-                        //             key: food.id,
-                        //             selling_Price: food.selling_Price,
-                        //             quantity: food.quantity,
-                        //             notes: "food.notes"
-                        //         }))
-                        //     })
-                        // );
                     },
                 },
             ],
             { cancelable: false }
         );
-    }
-    const handleChangeTable = () => {
+    };
 
-    }
+    const handleChangeTable = () => {
+        setModalSwitchTableVisible(true);
+    };
+
     const handleAbortTable = () => {
         setAbortModalVisible(true);
-    }
+    };
 
     const handlePayment = () => {
-
+        // Placeholder
     };
+
     const handleConfirmAbort = async () => {
         setAbortModalVisible(false);
-        console.log("abortReason");
         try {
             const res = await abortTableDish({
                 table_Id: Number(tableId),
@@ -202,390 +176,428 @@ export default function TableDishPage() {
                 total_money: foods.reduce((total, food) => total + food.selling_Price * food.quantity, 0),
                 total_quantity: foods.reduce((total, food) => total + food.quantity, 0),
             }).unwrap();
-            console.log("abortReason", res);
 
             if (res.isSuccess) {
-                Toast.show({
-                    type: "success",
-                    text1: "Thành công",
-                    text2: "Hủy bàn thành công"
-                })
-                router.replace(ROUTE.TABLE_AREA)
-
+                Toast.show({ type: "success", text1: "Thành công", text2: "Hủy bàn thành công" });
+                router.replace(ROUTE.TABLE_AREA);
             }
         } catch (err) {
             console.log("err", err);
-            Toast.show({
-                type: "error",
-                text1: "Thất bại",
-                text2: "Hủy bàn thất bại"
-            })
+            Toast.show({ type: "error", text1: "Thất bại", text2: err instanceof Error ? err.message : "Hủy bàn thất bại" });
         }
-        // dispatch(
-        //     tabledishAction.abortTableDish({
-        //         table_Id: Number(tableId),
-        //         reason_abort: abortReason,
-        //         total_money: foods.reduce((total, food) => total + food.selling_Price * food.quantity, 0),
-        //         total_quantity: foods.reduce((total, food) => total + food.quantity, 0),
-        //     })
-        // );
     };
-    const renderButton = (label: any, icon: any, backgroundColor: any, onPress: any, isDisable: boolean) => (
-        <ButtonCustom
-            mode="contained"
-            icon={icon}
-            style={{ backgroundColor }}
-            textColor="#fff"
-            contentStyle={{ justifyContent: 'flex-start' }}
-            onPress={onPress}
-            disabled={isDisable}
-        >
-            {label}
-        </ButtonCustom>
-    );
+
+    // Helper to calculate total
+    const totalAmount = foods.reduce((total, food) => total + food.selling_Price * food.quantity, 0);
 
     return (
-        <Container>
+        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
             <Modal
                 visible={abortModalVisible}
                 transparent
-                animationType="slide"
+                animationType="fade"
                 onRequestClose={() => setAbortModalVisible(false)}
             >
-                <View style={{
-                    flex: 1,
-                    backgroundColor: "rgba(0,0,0,0.3)",
-                    justifyContent: "center",
-                    alignItems: "center"
-                }}>
-                    <View style={{
-                        backgroundColor: "#fff",
-                        padding: 20,
-                        borderRadius: 10,
-                        width: "80%"
-                    }}>
-                        <Text style={{ fontWeight: "bold", fontSize: 16, marginBottom: 10 }}>Nhập lý do hủy bàn</Text>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.abortModalContent}>
+                        <Text style={styles.modalTitle}>Nhập lý do hủy bàn</Text>
                         <TextInput
                             placeholder="Nhập lý do..."
                             value={abortReason}
                             onChangeText={setAbortReason}
-                            style={{
-                                borderWidth: 1,
-                                borderColor: "#ccc",
-                                borderRadius: 6,
-                                padding: 8,
-                                marginBottom: 16
-                            }}
+                            style={styles.textInput}
+                            multiline
                         />
-                        <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
-                            <Button onPress={() => setAbortModalVisible(false)}>Đóng</Button>
-                            <Button
-                                onPress={handleConfirmAbort}
-                                disabled={!abortReason.trim()}
-                            >Xác nhận</Button>
+                        <View style={styles.modalActions}>
+                            <Button mode="text" onPress={() => setAbortModalVisible(false)} textColor="#6B7280">Đóng</Button>
+                            <Button mode="contained" onPress={handleConfirmAbort} disabled={!abortReason.trim()} buttonColor="#EF4444">Xác nhận</Button>
                         </View>
                     </View>
                 </View>
             </Modal>
 
+            {isLoading && <LoadingRotate />}
 
-            {/* {loading && <Loading message="Đang tải..." />} */}
-            <View
-                style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                }}
-            >
-                <View
-                    style={{
-                        marginLeft: 12
-                    }}
-                ><UIButtonBack />
+            {/* Header */}
+            <View style={styles.header}>
+                <UIButtonBack />
+                <View style={styles.headerInfo}>
+                    <Text style={styles.headerTitle}>{tableName}</Text>
+                    <Text style={styles.headerSubtitle}>{data?.data?.areaName}</Text>
                 </View>
-                <Text style={{
-                    textAlign: "center",
-                    fontSize: 18,
-                    fontWeight: "bold",
-                    flex: 1,
-                }}>
-                    {tableName} <Text style={{ color: "#ccc" }}>- {data?.data?.areaName}</Text>
-                </Text>
-                <View
-                    style={{
-                        marginRight: 12
-                    }}
+                <TouchableOpacity
+                    style={styles.menuButton}
+                    onPress={() => setModalTotalTableInfoSlice(true)}
                 >
-                    <TouchableOpacity
-                        style={{
-                            backgroundColor: "#f1f3f6",
-                            width: 36,
-                            height: 36,
-                            borderRadius: 50,
-                            justifyContent: "center",
-                            alignItems: "center",
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.1,
-                            shadowRadius: 2,
-                            margin: 10,
-                            elevation: 3,
-                        }}
-                        onPress={() => setModalTotalTableInfoSlice(true)}
-                    >
-                        <MaterialIcons name="menu" size={20} color="#2c2c2c" />
-                    </TouchableOpacity>
-                </View>
+                    <Ionicons name="ellipsis-horizontal" size={24} color="#374151" />
+                </TouchableOpacity>
             </View>
 
-            <View
-                style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: 10,
-                    borderBottomWidth: 1,
-                    borderBottomColor: "#ccc",
-                }}
-            >
-                <ButtonCustom
-                    mode="contained"
-                    icon={"plus"}
-                    style={{
-                        backgroundColor: "#07b80d",
-                    }}
-                    textColor="#fff"
-                    contentStyle={{ justifyContent: 'flex-start' }}
-                    onPress={handleAdddish}
-                >Thêm</ButtonCustom>
-            </View>
+            {/* Add Dish Bar */}
+            <TouchableOpacity style={styles.addDishBar} onPress={handleAdddish}>
+                <View style={styles.addDishIcon}>
+                    <Ionicons name="add" size={24} color="#fff" />
+                </View>
+                <Text style={styles.addDishText}>Thêm món mới</Text>
+            </TouchableOpacity>
+
+
+            {/* List */}
             <SwipeListView
                 data={foods}
-                keyExtractor={(item) => item.id.toString() ?? item.dish_Name}
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={styles.listContent}
                 renderItem={({ item }) => (
-                    <FoodCard
-                    // animation="fadeInUp" duration={400}
-                    >
-                        <FoodImage
-                            source={
-                                item.image
-                                    ? { uri: item.image }
-                                    : images.avt_default
-                            }
+                    <View style={styles.foodCard}>
+                        <Image
+                            source={item.image ? { uri: item.image } : images.avt_default}
+                            style={styles.foodImage}
                         />
-                        <Info>
-                            <FoodName>{item.dish_Name}</FoodName>
-                            <View
-                                style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    alignSelf: "flex-end",
-                                }}
+                        <View style={styles.foodInfo}>
+                            <Text style={styles.foodName} numberOfLines={2}>{item.dish_Name}</Text>
+                            <Text style={styles.foodPrice}>{formatCurrencyVN(item.selling_Price)} đ</Text>
+                        </View>
+                        <View style={styles.quantityContainer}>
+                            <TouchableOpacity
+                                style={styles.qtyBtn}
+                                onPress={() => handleQuantityChange(item.id, Math.max(item.quantity - 1, 1))}
                             >
-                                <IconButton
-                                    icon="minus"
-                                    size={20}
-                                    onPress={() => handleQuantityChange(item.id, Math.max(item.quantity - 1, 1))}
-                                />
-                                <TextInput
-                                    value={item.quantity.toString() ?? ""}
-                                    keyboardType="numeric"
-                                    onChangeText={(value) => handleQuantityChange(item.id, Math.max(Number(value), 1))}
-                                    style={{
-                                        width: 50,
-                                        height: 40,
-                                        textAlign: "center",
-                                        borderWidth: 1,
-                                        borderColor: "#ccc",
-                                        borderRadius: 4,
-                                    }}
-                                />
-                                <IconButton
-                                    icon="plus"
-                                    size={20}
-                                    onPress={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                />
-                            </View>
-                            <PriceRating>
-                                <Rating>⭐ 4.9 (10 Review)</Rating>
-                                <Price>{formatCurrencyVN(item.selling_Price)} đ</Price>
-                            </PriceRating>
-                            <View style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                            }}>
-                            </View>
-                        </Info>
-                    </FoodCard>
+                                <Ionicons name="remove" size={16} color="#374151" />
+                            </TouchableOpacity>
+                            <Text style={styles.qtyText}>{item.quantity}</Text>
+                            <TouchableOpacity
+                                style={styles.qtyBtn}
+                                onPress={() => handleQuantityChange(item.id, item.quantity + 1)}
+                            >
+                                <Ionicons name="add" size={16} color="#374151" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 )}
                 renderHiddenItem={({ item }) => (
-                    <HiddenRow>
-                        <Animatable.View animation="bounceIn" duration={500}>
-                            <IconButton
-                                icon="delete"
-                                iconColor="white"
-                                containerColor="#ff3b30"
-                                onPress={() => handleDelete(item.id.toString())}
-                            />
-                        </Animatable.View>
-                    </HiddenRow>
+                    <View style={styles.rowBack}>
+                        <TouchableOpacity
+                            style={[styles.backBtn, styles.backBtnRight]}
+                            onPress={() => handleDelete(item.id.toString())}
+                        >
+                            <Ionicons name="trash-outline" size={24} color="#FFF" />
+                        </TouchableOpacity>
+                    </View>
                 )}
-                rightOpenValue={-80}
+                rightOpenValue={-75}
                 disableRightSwipe
-                previewRowKey={"1"}
+                previewRowKey={"0"}
                 previewOpenValue={-40}
-                previewOpenDelay={300}
+                previewOpenDelay={3000}
             />
-            {
-                data?.data && <TotalTableInfoSlice
-                    table={data?.data as ITableDishData}
-                    visible={modalTotalTableInfoSlice}
-                    onClose={() => setModalTotalTableInfoSlice(false)}
-                />
-            }
 
-            <View
-                style={{
-                    height: 120,
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-around",
-                    alignItems: "center",
-                    padding: 6,
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    backgroundColor: "#fff",
-                    borderTopLeftRadius: 30,
-                    borderTopRightRadius: 30,
-                    paddingBottom: 10,
-                    zIndex: 100
-                }}
-            >
-                <View>
-                    {
-                        data?.data?.isActive
-                            ? renderButton("Cập nhật", "plus", "#5CB338", handleUpdate, false)
-                            : renderButton("Tạo bàn", "plus", "#5CB338", handleCreate, false)
-                    }
-
-                    {renderButton("Chuyển bàn", "autorenew", "#FA812F", handleChangeTable, !data?.data?.isActive)}
+            {/* Bottom Actions */}
+            <Surface style={styles.bottomBar} elevation={4}>
+                <View style={styles.totalSection}>
+                    <Text style={styles.totalLabel}>Tổng tiền:</Text>
+                    <Text style={styles.totalValue}>{formatCurrencyVN(totalAmount)} đ</Text>
                 </View>
 
-                <View>
-                    {renderButton("Thanh toán", "contactless-payment", "#4E71FF", handlePayment, !data?.data?.isActive)}
-                    {renderButton("Hủy bàn", "close", "#FF0B55", handleAbortTable, !data?.data?.isActive)}
-                </View>
-            </View>
+                {data?.data?.isActive ? (
+                    <View style={styles.gridActions}>
+                        <Button
+                            mode="contained"
+                            style={[styles.gridBtn, { backgroundColor: '#22C55E' }]} // Green
+                            icon="check"
+                            textColor="#fff"
+                            onPress={handleUpdate}
+                        >
+                            Cập nhật
+                        </Button>
+                        <Button
+                            mode="contained"
+                            style={[styles.gridBtn, { backgroundColor: '#F97316' }]} // Orange
+                            icon="autorenew"
+                            textColor="#fff"
+                            onPress={handleChangeTable}
+                        >
+                            Chuyển bàn
+                        </Button>
+                        <Button
+                            mode="contained"
+                            style={[styles.gridBtn, { backgroundColor: '#3B82F6' }]} // Blue
+                            icon="credit-card-outline"
+                            textColor="#fff"
+                            // @ts-ignore
+                            onPress={handlePayment}
+                        >
+                            Thanh toán
+                        </Button>
+                        <Button
+                            mode="contained"
+                            style={[styles.gridBtn, { backgroundColor: '#EF4444' }]} // Red
+                            icon="close"
+                            textColor="#fff"
+                            onPress={handleAbortTable}
+                        >
+                            Hủy bàn
+                        </Button>
+                    </View>
+                ) : (
+                    <Button
+                        mode="contained"
+                        style={styles.fullWidthBtn}
+                        buttonColor="#22C55E"
+                        contentStyle={{ height: 48 }}
+                        onPress={handleCreate}
+                    >
+                        Tạo bàn mới
+                    </Button>
+                )}
+            </Surface>
+
+
+            {data?.data && <TotalTableInfoSlice
+                table={data?.data as ITableDishData}
+                visible={modalTotalTableInfoSlice}
+                onClose={() => setModalTotalTableInfoSlice(false)}
+            />}
+
             <Dishmodal
                 visible={modalDishVisible}
                 onClose={() => setModalDishVisible(false)}
                 onItemPress={(items?: IDish[]) => {
                     const newItems = items ?? [];
-
                     setFoods(prevFoods => {
                         const updatedFoods = [...prevFoods];
-
                         for (const newItem of newItems) {
                             const index = updatedFoods.findIndex(food => food.id === newItem.id);
-
                             if (index !== -1) {
-                                // Món đã tồn tại → tăng quantity
-                                updatedFoods[index] = {
-                                    ...updatedFoods[index],
-                                    quantity: updatedFoods[index].quantity + 1,
-                                };
+                                updatedFoods[index] = { ...updatedFoods[index], quantity: updatedFoods[index].quantity + 1 };
                             } else {
-                                // Món chưa có → thêm mới với quantity = 1
-                                updatedFoods.push({
-                                    ...newItem,
-                                    quantity: 1,
-                                });
+                                updatedFoods.push({ ...newItem, quantity: 1 });
                             }
                         }
-
                         return updatedFoods;
                     });
                 }}
-
             />
-
-        </Container>
-    )
+            <SwitchTableModal
+                visible={modalSwitchTableVisible}
+                onClose={() => setModalSwitchTableVisible(false)}
+                currentTableId={Number(tableId)}
+            />
+        </SafeAreaView>
+    );
 }
 
-
-const Container = styled.View`
-  flex: 1;
-  background-color: #f2f2f2;
-  padding-top: 50px;
-`;
-const FoodCard = styled.View`
-  background-color: #fff;
-  flex-direction: row;
-  padding: 8px;
-  margin: 8px 16px;
-  border-radius: 10px;
-  border-color: #ccc;
-  border-width: 1px;
-  
-`;
-
-const FoodImage = styled.Image`
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
-  padding: 2px;
-`;
-
-const Info = styled.View`
-  flex: 1;
-  margin-left: 12px;
-`;
-
-const FoodName = styled.Text`
-  font-weight: bold;
-  font-size: 16px;
-  color: #333;
-`;
-
-const Tag = styled.Text`
-  font-size: 12px;
-  background-color: #ffe6e6;
-  color: #ff6b6b;
-  padding: 3px 8px;
-  border-radius: 6px;
-  align-self: flex-start;
-  margin-top: 4px;
-`;
-
-const PriceRating = styled.View`
-  flex-direction: row;
-  justify-content: space-between;
-  margin-top: 6px;
-`;
-
-const Rating = styled.Text`
-  font-size: 13px;
-  color: #ff9800;
-`;
-
-const Price = styled.Text`
-  font-size: 14px;
-  font-weight: bold;
-  color: #f00909;
-`;
-
-const HiddenRow = styled.View`
-  align-items: flex-end;
-  justify-content: center;
-  flex: 1;
-  margin-right: 24px;
-`;
-const ButtonCustom = styled(Button)`
-    border-radius: 4px;
-    margin-top: 4px;
-    margin-bottom: 4px;
-`
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "#F9FAFB",
+    },
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: 16,
+        paddingBottom: 10,
+        backgroundColor: "#F9FAFB",
+    },
+    headerInfo: {
+        flex: 1,
+        alignItems: "center",
+    },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: "700",
+        color: "#111827",
+    },
+    headerSubtitle: {
+        fontSize: 14,
+        color: "#6B7280",
+    },
+    menuButton: {
+        padding: 8,
+        backgroundColor: "#F3F4F6",
+        borderRadius: 20,
+    },
+    addDishBar: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginHorizontal: 16,
+        marginBottom: 10,
+        backgroundColor: "#fff",
+        padding: 10,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#E5E7EB",
+    },
+    addDishIcon: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: "#10B981",
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: 10,
+    },
+    addDishText: {
+        fontSize: 16,
+        fontWeight: "600",
+        color: "#374151",
+    },
+    listContent: {
+        paddingBottom: 220, // Increased space for larger bottom bar
+        paddingHorizontal: 16,
+    },
+    foodCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#fff",
+        borderRadius: 12,
+        padding: 10,
+        marginBottom: 10,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    foodImage: {
+        width: 60,
+        height: 60,
+        borderRadius: 8,
+        backgroundColor: "#F3F4F6",
+    },
+    foodInfo: {
+        flex: 1,
+        marginLeft: 12,
+        justifyContent: "center",
+    },
+    foodName: {
+        fontSize: 16,
+        fontWeight: "600",
+        color: "#1F2937",
+        marginBottom: 4,
+    },
+    foodPrice: {
+        fontSize: 14,
+        color: "#DC2626",
+        fontWeight: "700",
+    },
+    quantityContainer: {
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "space-between",
+        height: 70, // Align with card height
+        paddingVertical: 2
+    },
+    qtyBtn: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: "#F3F4F6",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    qtyText: {
+        fontSize: 16,
+        fontWeight: "600",
+        marginVertical: 4,
+    },
+    rowBack: {
+        alignItems: 'center',
+        backgroundColor: '#F9FAFB',
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginBottom: 10,
+        paddingRight: 16,
+    },
+    backBtn: {
+        alignItems: 'center',
+        bottom: 0,
+        justifyContent: 'center',
+        position: 'absolute',
+        top: 0,
+        width: 75,
+        borderRadius: 12,
+    },
+    backBtnRight: {
+        backgroundColor: '#EF4444',
+        right: 0,
+    },
+    bottomBar: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: "#fff",
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 16,
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    totalSection: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    totalLabel: {
+        fontSize: 16,
+        color: "#6B7280",
+    },
+    totalValue: {
+        fontSize: 20,
+        fontWeight: "700",
+        color: "#DC2626",
+    },
+    gridActions: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 10,
+        justifyContent: 'space-between',
+    },
+    gridBtn: {
+        width: '48%', // Approx 2 columns
+        borderRadius: 8,
+    },
+    fullWidthBtn: {
+        width: '100%',
+        borderRadius: 8,
+    },
+    // Modal
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: "center",
+        alignItems: "center"
+    },
+    abortModalContent: {
+        backgroundColor: "#fff",
+        padding: 20,
+        borderRadius: 16,
+        width: "85%",
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        marginBottom: 12,
+        color: "#1F2937"
+    },
+    textInput: {
+        borderWidth: 1,
+        borderColor: "#E5E7EB",
+        borderRadius: 8,
+        padding: 12,
+        minHeight: 80,
+        marginBottom: 16,
+        textAlignVertical: 'top'
+    },
+    modalActions: {
+        flexDirection: "row",
+        justifyContent: "flex-end",
+        gap: 8
+    }
+});

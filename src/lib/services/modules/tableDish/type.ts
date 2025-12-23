@@ -42,3 +42,8 @@ export interface IAbortOrder {
     total_money: number;
     total_quantity: number;
 }
+
+export interface ISwitchTableDTO {
+    tableId: number;
+    targetTableId: number;
+}
