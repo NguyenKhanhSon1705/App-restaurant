@@ -12,7 +12,8 @@ export const tableApi = apiSlice.injectEndpoints({
             query: (body) => ({
                 url: `${tableDish}/get-dish-table?tableId=${body}`,
                 method: 'GET'
-            })
+            }),
+            providesTags: ['TableDish']
         }),
 
         createTableDish: build.mutation<IApiResponse<ITableDishData>, ITableDishDTO>({
@@ -20,7 +21,8 @@ export const tableApi = apiSlice.injectEndpoints({
                 url: `${tableDish}/open-table-dish`,
                 method: "POST",
                 body
-            })
+            }),
+            invalidatesTags: ['TableDish', 'TableArea']
         }),
 
         updateTableDish: build.mutation<IApiResponse<ITableDishData>, ITableDishDTO>({
@@ -28,7 +30,8 @@ export const tableApi = apiSlice.injectEndpoints({
                 url: `${tableDish}/update-dish-table`,
                 method: "POST",
                 body
-            })
+            }),
+            invalidatesTags: ['TableDish']
         }),
         abortTableDish: build.mutation<IApiResponse<ITableDishData>, IAbortOrder>({
             async queryFn(data, _queryApi, _extraOptions, baseQuery) {
@@ -48,12 +51,15 @@ export const tableApi = apiSlice.injectEndpoints({
                 if (result.error) return { error: result.error };
                 return { data: result.data as IApiResponse<ITableDishData> };
             },
+            invalidatesTags: ['TableDish', 'TableArea']
         }),
-        switchTable: build.mutation<IApiResponse<any>, { currentTableId: number; targetTableId: number }>({
+        switchTable: build.mutation<IApiResponse<any>, { table_id_old: number; table_id_new: number }>({
             query: (body) => ({
-                url: `${tableDish}/update-table-id?oldTableId=${body.currentTableId}&newTableId=${body.targetTableId}`,
+                url: `${tableDish}/choose-table-dish`,
                 method: 'POST',
-            })
+                body
+            }),
+            invalidatesTags: ['TableDish', 'TableArea']
         }),
 
 

@@ -66,7 +66,7 @@ export default function TableAreaPage() {
         // Based on original code: isActive ? "#8cc1ec" (Blue) : "#ffcccc" (Red)
         // Let's interpret: isActive = True (Available/Blue), False (Occupied/Red)
 
-        const isAvailable = item.isActive;
+        const isAvailable = !item.isActive;
 
         return (
             <Pressable

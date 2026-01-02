@@ -3,7 +3,7 @@ import { useGetTableAreaDataQuery } from '@/lib/services/modules';
 import { useGetAreaDataQuery } from '@/lib/services/modules/area';
 import { IAreaData } from '@/lib/services/modules/area/type';
 import { useSwitchTableMutation } from '@/lib/services/modules/tableDish';
-import { ROUTE } from '@/routers';
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -12,6 +12,7 @@ import {
     Dimensions,
     Easing,
     FlatList,
+    Pressable,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -22,18 +23,25 @@ import { Button, Surface } from 'react-native-paper';
 import Toast from 'react-native-toast-message';
 
 const screenHeight = Dimensions.get('window').height;
+const screenWidth = Dimensions.get('window').width;
 const modalHeight = screenHeight * 0.78;
+
+const COLUMN_COUNT = 3;
+const GAP = 12;
+const PADDING = 16;
+const ITEM_WIDTH = (screenWidth - (PADDING * 2) - (GAP * (COLUMN_COUNT - 1))) / COLUMN_COUNT;
 
 type Props = {
     visible: boolean;
     onClose: () => void;
     onItemPress?: (item: any) => void;
     currentTableId?: number;
+    onSwitchSuccess?: (newTableId: number, newTableName: string) => void;
 };
 
 
 
-const SwitchTableModal = ({ visible, onClose, onItemPress, currentTableId }: Props) => {
+const SwitchTableModal = ({ visible, onClose, onItemPress, currentTableId, onSwitchSuccess }: Props) => {
     const slideAnim = useRef(new Animated.Value(modalHeight)).current;
 
     // State for selected area and table
@@ -54,6 +62,8 @@ const SwitchTableModal = ({ visible, onClose, onItemPress, currentTableId }: Pro
     useEffect(() => {
         if (visible) {
             setIsVisible(true);
+            setSelectedTableId(null); // Reset selection when opening
+
             // Default to first area if available and none selected
             if (!selectedAreaId && areaData?.data && areaData.data.length > 0) {
                 setSelectedAreaId(areaData.data[0].id);
@@ -120,8 +130,8 @@ const SwitchTableModal = ({ visible, onClose, onItemPress, currentTableId }: Pro
                     onPress: async () => {
                         try {
                             const result = await switchTable({
-                                currentTableId: currentTableId,
-                                targetTableId: selectedTableId
+                                table_id_old: currentTableId,
+                                table_id_new: selectedTableId
                             }).unwrap();
 
                             if (result.isSuccess) {
@@ -130,8 +140,21 @@ const SwitchTableModal = ({ visible, onClose, onItemPress, currentTableId }: Pro
                                     text1: "Thành công",
                                     text2: "Chuyển bàn thành công"
                                 });
+
+                                // Find selected table name for UI update
+                                const targetTable = tableData?.data?.find(t => t.id === selectedTableId);
+                                const newTableName = targetTable?.nameTable || "Bàn mới";
+
+                                // Update current route params without reloading the entire app
+                                router.setParams({
+                                    tableId: selectedTableId.toString(),
+                                    tableName: newTableName
+                                });
+
+                                if (onSwitchSuccess) {
+                                    onSwitchSuccess(selectedTableId, newTableName);
+                                }
                                 onClose();
-                                router.replace(ROUTE.TABLE_AREA);
                             }
                         } catch (error) {
                             Toast.show({
@@ -198,28 +221,72 @@ const SwitchTableModal = ({ visible, onClose, onItemPress, currentTableId }: Pro
                             <LoadingRotate />
                         ) : (
                             <FlatList
-                                data={tableData?.data?.filter(t => !t.isActive && t.id !== currentTableId)} // Only show empty tables
+                                data={tableData?.data?.filter(t => t.id !== currentTableId)} // Show all tables EXCEPT the current one
                                 keyExtractor={(item) => `table-${item.id}`}
                                 numColumns={3}
-                                ListEmptyComponent={
-                                    <Text style={styles.emptyText}>Không có bàn trống trong khu vực này</Text>
-                                }
-                                renderItem={({ item }) => (
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.tableCard,
-                                            selectedTableId === item.id && styles.selectedTableCard
-                                        ]}
-                                        onPress={() => handleTablePress(item.id)}
-                                    >
-                                        <Text style={[
-                                            styles.tableTitle,
-                                            selectedTableId === item.id && styles.selectedTableTitle
-                                        ]}>
-                                            {item.nameTable}
-                                        </Text>
-                                    </TouchableOpacity>
-                                )}
+                                renderItem={({ item }) => {
+                                    const isAvailable = !item.isActive;
+                                    const isSelected = selectedTableId === item.id;
+
+                                    const handlePress = () => {
+                                        if (!isAvailable) {
+                                            Toast.show({
+                                                type: "info",
+                                                text1: "Thông báo",
+                                                text2: "Bàn này đang có khách, không thể chuyển đến"
+                                            });
+                                            return;
+                                        }
+                                        handleTablePress(item.id);
+                                    };
+
+                                    return (
+                                        <Pressable
+                                            onPress={handlePress}
+                                            style={({ pressed }: { pressed: boolean }) => [
+                                                styles.tableCard,
+                                                {
+                                                    backgroundColor: isAvailable ? "#F0F9FF" : "#FEF2F2",
+                                                    borderColor: isSelected ? "#4E71FF" : (isAvailable ? "#BAE6FD" : "#FECACA"),
+                                                    borderWidth: isSelected ? 2 : 1,
+                                                    transform: [{ scale: pressed ? 0.98 : 1 }],
+                                                    margin: GAP / 2, // Adjust margin for grid
+                                                }
+                                            ]}
+                                        >
+                                            <View style={[
+                                                styles.iconBadge,
+                                                { backgroundColor: isAvailable ? "#E0F2FE" : "#FEE2E2" }
+                                            ]}>
+                                                <Ionicons
+                                                    name={isAvailable ? "restaurant-outline" : "people-outline"}
+                                                    size={24}
+                                                    color={isAvailable ? "#0284C7" : "#DC2626"}
+                                                />
+                                            </View>
+
+                                            <Text style={[
+                                                styles.tableTitle,
+                                                { color: isAvailable ? "#0369A1" : "#991B1B" }
+                                            ]} numberOfLines={1}>
+                                                {item.nameTable}
+                                            </Text>
+
+                                            <View style={[
+                                                styles.statusDot,
+                                                { backgroundColor: isAvailable ? "#22C55E" : "#EF4444" }
+                                            ]} />
+
+                                            {isSelected && (
+                                                <View style={styles.selectionOverlay}>
+                                                    <View style={styles.checkBadge}>
+                                                        <Ionicons name="checkmark" size={12} color="#fff" />
+                                                    </View>
+                                                </View>
+                                            )}
+                                        </Pressable>
+                                    );
+                                }}
                             />
                         )}
                     </View>
@@ -298,30 +365,67 @@ const styles = StyleSheet.create({
         color: '#4E71FF',
         fontWeight: 'bold',
     },
+    // Synced Table Card Styles
     tableCard: {
-        flex: 1,
-        margin: 5,
-        height: 80,
-        backgroundColor: '#f8f9fa',
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
+        width: ITEM_WIDTH,
+        height: ITEM_WIDTH * 1.1,
+        borderRadius: 16,
         borderWidth: 1,
-        borderColor: '#eee',
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 8,
+        position: 'relative',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
         elevation: 2,
     },
     selectedTableCard: {
-        borderColor: '#4E71FF',
-        backgroundColor: '#f0f4ff',
         borderWidth: 2,
+        borderColor: '#4E71FF',
+        shadowOpacity: 0.1,
+        elevation: 4,
+    },
+    iconBadge: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 8,
     },
     tableTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
+        fontSize: 14,
+        fontWeight: "700",
+        textAlign: "center",
     },
-    selectedTableTitle: {
-        color: '#4E71FF',
+    statusDot: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+    },
+    selectionOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(78, 113, 255, 0.05)',
+        borderRadius: 16,
+        borderWidth: 2,
+        borderColor: '#4E71FF',
+        pointerEvents: 'none',
+    },
+    checkBadge: {
+        position: 'absolute',
+        bottom: 6,
+        right: 6,
+        backgroundColor: '#4E71FF',
+        borderRadius: 8,
+        width: 16,
+        height: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     emptyText: {
         textAlign: 'center',

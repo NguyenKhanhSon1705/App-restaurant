@@ -1,6 +1,5 @@
-"use client";
 import { ROUTE } from "@/routers";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { getAuthFromStorage } from "../utils";
 
@@ -10,20 +9,39 @@ interface AuthGuardProps {
 
 export default function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
       const auth = await getAuthFromStorage();
+
+      const normalize = (p: string) => p.replace(/\/\([^)]+\)/g, '').replace(/\/index$/, '/');
+      const normalizedPath = normalize(pathname) || '/';
+      const normalizedLoginPath = normalize(ROUTE.LOGIN);
+
+      // Routes that should redirect to dashboard if ALREADY authenticated
+      const isPublicRoute = normalizedPath === normalizedLoginPath || normalizedPath === '/';
+
       if (!auth || !auth.token?.accessToken) {
-        router.replace(ROUTE.LOGIN);
+        if (!isPublicRoute && normalizedPath !== normalizedLoginPath) {
+          // console.log("[AuthGuard] Not authenticated, redirecting to LOGIN");
+          router.replace(ROUTE.LOGIN);
+        } else {
+          setIsAuthChecked(true);
+        }
       } else {
-        setIsAuthChecked(true);
+        if (isPublicRoute) {
+          // console.log("[AuthGuard] Already authenticated, redirecting to TABLE_AREA");
+          router.replace(ROUTE.TABLE_AREA);
+        } else {
+          setIsAuthChecked(true);
+        }
       }
     };
 
     checkAuth();
-  }, [router]);
+  }, [pathname]);
 
   // Chỉ render children khi đã kiểm tra auth
   if (!isAuthChecked) return null; // hoặc loading spinner

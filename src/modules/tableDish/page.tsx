@@ -6,8 +6,8 @@ import { useAbortTableDishMutation, useCreateTableDishMutation, useGetTableDishD
 import { IDish, ITableDishData } from "@/lib/services/modules/tableDish/type";
 import { ROUTE } from "@/routers";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
     Alert,
     Dimensions,
@@ -41,19 +41,23 @@ export default function TableDishPage() {
     const [updateTableDish] = useUpdateTableDishMutation();
     const [createTableDish] = useCreateTableDishMutation();
     const [abortTableDish] = useAbortTableDishMutation();
-    const { data, refetch, isLoading } = useGetTableDishDataQuery(Number(tableId), {
+    const { data, refetch, isLoading, isFetching } = useGetTableDishDataQuery(Number(tableId), {
         skip: !tableId,
     });
 
-    useFocusEffect(
-        useCallback(() => {
-            refetch();
-        }, [refetch])
-    );
+    // useFocusEffect(
+    //     useCallback(() => {
+    //         refetch();
+    //     }, [refetch, tableId])
+    // );
 
     useEffect(() => {
-        setFoods(data?.data?.dish || []);
-    }, [data?.data?.dish]);
+        if (data?.data?.dish) {
+            setFoods(data.data.dish);
+        } else if (!isLoading && !isFetching && data?.data) {
+            setFoods([]);
+        }
+    }, [data?.data?.dish, isLoading, isFetching]);
 
     const handleDelete = (rowKey: string) => {
         Alert.alert(
@@ -142,7 +146,7 @@ export default function TableDishPage() {
 
                             if (res.isSuccess) {
                                 Toast.show({ type: "success", text1: "Thành công", text2: "Tạo bàn thành công" });
-                                refetch();
+                                // refetch(); // Handled by tags
                             }
                         } catch (err) {
                             console.log("err", err);
@@ -185,6 +189,11 @@ export default function TableDishPage() {
             console.log("err", err);
             Toast.show({ type: "error", text1: "Thất bại", text2: err instanceof Error ? err.message : "Hủy bàn thất bại" });
         }
+    };
+
+    const handleSwitchSuccess = () => {
+        // Trigger manual refetch to get data for the NEW tableId
+        // refetch(); // Handled by tags
     };
 
     // Helper to calculate total
@@ -381,6 +390,7 @@ export default function TableDishPage() {
                 visible={modalSwitchTableVisible}
                 onClose={() => setModalSwitchTableVisible(false)}
                 currentTableId={Number(tableId)}
+                onSwitchSuccess={handleSwitchSuccess}
             />
         </SafeAreaView>
     );
