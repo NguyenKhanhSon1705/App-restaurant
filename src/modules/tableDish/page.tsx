@@ -23,6 +23,7 @@ import { Button, Surface } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SwipeListView } from "react-native-swipe-list-view";
 import Toast from "react-native-toast-message";
+import Checkout from "./components/checkout";
 import Dishmodal from "./components/dishmodal";
 import SwitchTableModal from "./components/switchTableModal";
 import TotalTableInfoSlice from "./components/totalTableInfoSlice";
@@ -33,6 +34,7 @@ export default function TableDishPage() {
     const [foods, setFoods] = useState<IDish[] | []>([]);
     const [modalDishVisible, setModalDishVisible] = useState(false);
     const [modalSwitchTableVisible, setModalSwitchTableVisible] = useState(false);
+    const [modalCheckoutVisible, setModalCheckoutVisible] = useState(false);
     const [modalTotalTableInfoSlice, setModalTotalTableInfoSlice] = useState(false);
     const { tableName, tableId } = useLocalSearchParams();
     const [abortModalVisible, setAbortModalVisible] = useState(false);
@@ -168,7 +170,7 @@ export default function TableDishPage() {
     };
 
     const handlePayment = () => {
-        // Placeholder
+        setModalCheckoutVisible(true);
     };
 
     const handleConfirmAbort = async () => {
@@ -391,6 +393,12 @@ export default function TableDishPage() {
                 onClose={() => setModalSwitchTableVisible(false)}
                 currentTableId={Number(tableId)}
                 onSwitchSuccess={handleSwitchSuccess}
+            />
+            <Checkout
+                visible={modalCheckoutVisible}
+                onClose={() => setModalCheckoutVisible(false)}
+                tableId={Number(tableId)}
+                tableName={String(tableName)}
             />
         </SafeAreaView>
     );

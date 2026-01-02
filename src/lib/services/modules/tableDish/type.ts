@@ -47,3 +47,24 @@ export interface ISwitchTableDTO {
     tableId: number;
     targetTableId: number;
 }
+
+export interface ICheckoutData {
+    shop_name: string;
+    address_shop: string;
+    hotline: string;
+    staff_name: string;
+    time_start: string;
+    area_name: string;
+    time_end: string | null;
+    table_name: string;
+    listDish: IDish[];
+    total_quantity: number;
+    total_money: number;
+    shop_id: number;
+}
+
+export interface IPaymentDTO {
+    shop_id: number;
+    table_id: number;
+    payment_method: number;
+}

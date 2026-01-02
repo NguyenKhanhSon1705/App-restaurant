@@ -1,7 +1,8 @@
 import { images } from "@/assets/images";
 import { IUser } from "@/common/types";
+import { removeAuthFromStorage, USER_LOGOUT } from "@/common/utils";
 import { UIButtonBack } from "@/core/ui";
-import { useAppSelector } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { RootState } from "@/lib/services/store";
 import { ROUTE } from "@/routers";
 import {
@@ -121,13 +122,19 @@ export default function SettingPage() {
         }
     };
 
+    const dispatch = useAppDispatch();
+
     const handleLogout = () => {
         Alert.alert("Đăng xuất", "Bạn có muốn đăng xuất không?", [
             { text: "Hủy", style: "cancel" },
             {
                 text: "Đăng xuất",
                 style: "destructive",
-                onPress: () => router.replace(ROUTE.LOGIN),
+                onPress: async () => {
+                    await removeAuthFromStorage();
+                    dispatch({ type: USER_LOGOUT });
+                    router.replace(ROUTE.LOGIN);
+                },
             },
         ]);
     };

@@ -20,14 +20,23 @@ export async function getAuthFromStorage() {
     // 5. Parse trường token bên trong (giống logic của bạn)
     // Điều này giả định rằng auth.token cũng là một chuỗi JSON
     const token = JSON.parse(auth.token);
-    
+
     // 6. Gán lại token đã được parse vào đối tượng auth
     auth.token = token;
-    
+
     return auth;
 
   } catch (error) {
     console.error("Error parsing auth from storage:", error);
     return null;
+  }
+}
+
+export async function removeAuthFromStorage() {
+  const authKey = "persist:auth";
+  try {
+    await AsyncStorage.removeItem(authKey);
+  } catch (error) {
+    console.error("Error removing auth from storage:", error);
   }
 }

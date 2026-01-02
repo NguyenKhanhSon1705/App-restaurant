@@ -1,7 +1,8 @@
+import { useAppSelector } from "@/lib/hooks";
+import { RootState } from "@/lib/services/store";
 import { ROUTE } from "@/routers";
 import { usePathname, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { getAuthFromStorage } from "../utils";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -10,12 +11,11 @@ interface AuthGuardProps {
 export default function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const auth = useAppSelector((state: RootState) => state.auth);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const auth = await getAuthFromStorage();
-
+    const checkAuth = () => {
       const normalize = (p: string) => p.replace(/\/\([^)]+\)/g, '').replace(/\/index$/, '/');
       const normalizedPath = normalize(pathname) || '/';
       const normalizedLoginPath = normalize(ROUTE.LOGIN);
@@ -23,7 +23,9 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       // Routes that should redirect to dashboard if ALREADY authenticated
       const isPublicRoute = normalizedPath === normalizedLoginPath || normalizedPath === '/';
 
-      if (!auth || !auth.token?.accessToken) {
+      const isAuthenticated = !!auth.token?.accessToken;
+
+      if (!isAuthenticated) {
         if (!isPublicRoute && normalizedPath !== normalizedLoginPath) {
           // console.log("[AuthGuard] Not authenticated, redirecting to LOGIN");
           router.replace(ROUTE.LOGIN);
@@ -41,7 +43,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     };
 
     checkAuth();
-  }, [pathname]);
+  }, [pathname, auth.token.accessToken]);
 
   // Chỉ render children khi đã kiểm tra auth
   if (!isAuthChecked) return null; // hoặc loading spinner

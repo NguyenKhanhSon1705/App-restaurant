@@ -2,7 +2,7 @@ import type { IApiResponse } from '@/common/types';
 import { getIdShopFromStorage } from '@/common/utils';
 import { apiSlice } from '../../api';
 import API_SERVICE_PREFIX from '../../utils/apiServicePrefix';
-import { IAbortOrder, ITableDishData, ITableDishDTO } from './type';
+import { IAbortOrder, ICheckoutData, IPaymentDTO, ITableDishData, ITableDishDTO } from './type';
 
 const tableDish = API_SERVICE_PREFIX.tableDish;
 
@@ -61,6 +61,22 @@ export const tableApi = apiSlice.injectEndpoints({
             }),
             invalidatesTags: ['TableDish', 'TableArea']
         }),
+        getInfoCheckout: build.query<IApiResponse<ICheckoutData>, { table_id: number; shop_id: number }>({
+            query: (params) => ({
+                url: `${tableDish}/get-info-checkout`,
+                method: 'GET',
+                params
+            }),
+            providesTags: ['TableDish']
+        }),
+        checkoutTable: build.mutation<IApiResponse<any>, IPaymentDTO>({
+            query: (body) => ({
+                url: `${tableDish}/checkout-table`,
+                method: 'POST',
+                body
+            }),
+            invalidatesTags: ['TableDish', 'TableArea']
+        }),
 
 
     }),
@@ -72,5 +88,7 @@ export const {
     useUpdateTableDishMutation,
     useCreateTableDishMutation,
     useAbortTableDishMutation,
-    useSwitchTableMutation
+    useSwitchTableMutation,
+    useGetInfoCheckoutQuery,
+    useCheckoutTableMutation
 } = tableApi;
