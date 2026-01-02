@@ -20,7 +20,6 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       const normalizedPath = normalize(pathname) || '/';
       const normalizedLoginPath = normalize(ROUTE.LOGIN);
 
-      // Routes that should redirect to dashboard if ALREADY authenticated
       const isPublicRoute = normalizedPath === normalizedLoginPath || normalizedPath === '/';
 
       const isAuthenticated = !!auth.token?.accessToken;
@@ -45,8 +44,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     checkAuth();
   }, [pathname, auth.token.accessToken]);
 
-  // Chỉ render children khi đã kiểm tra auth
-  if (!isAuthChecked) return null; // hoặc loading spinner
+  if (!isAuthChecked) return null;
 
   return <>{children}</>;
 }

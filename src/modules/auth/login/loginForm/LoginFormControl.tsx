@@ -12,8 +12,8 @@ const Email = () => {
         control
     } = useLoginFormContext();
     return (
-        <View>
-            <Text style={{ paddingVertical: 4 }}>
+        <View style={{ marginBottom: 16 }}>
+            <Text style={{ marginBottom: 8, fontSize: 14, fontWeight: '600', color: '#374151' }}>
                 Email
             </Text>
             <Controller
@@ -22,16 +22,16 @@ const Email = () => {
                 render={({ field: { onChange, value }, fieldState: { invalid, error } }) => (
                     <View>
                         <UITextField
-                            placeholder="Nhập email"
+                            placeholder="Nhập địa chỉ email"
                             value={value}
                             onChangeText={onChange}
                             type={EInputType.TEXT}
                             textFieldSize={ESize.M}
                             isInvalid={invalid}
                         />
-                        <Text style={{ color: "#EF4444" }}>
+                        {error && <Text style={{ color: "#EF4444", marginTop: 4, fontSize: 12 }}>
                             {error?.message}
-                        </Text>
+                        </Text>}
                     </View>
                 )}
             />
@@ -45,10 +45,10 @@ const Password = () => {
         control,
         formState: { errors },
     } = useLoginFormContext();
-    console.log(errors)
+
     return (
-        <View>
-            <Text style={{ paddingVertical: 4 }}>
+        <View style={{ marginBottom: 24 }}>
+            <Text style={{ marginBottom: 8, fontSize: 14, fontWeight: '600', color: '#374151' }}>
                 Mật khẩu
             </Text>
             <Controller
@@ -57,22 +57,22 @@ const Password = () => {
                 render={({ field: { onChange, value }, fieldState: { invalid, error } }) => (
                     <View>
                         <UITextField
-                            placeholder="Nhập email"
+                            placeholder="Nhập mật khẩu"
                             value={value}
                             onChangeText={onChange}
                             type={EInputType.PASSWORD}
                             textFieldSize={ESize.M}
                             isInvalid={invalid}
                         />
-                        <Text style={{ color: "#EF4444" }}>
+                        {error && <Text style={{ color: "#EF4444", marginTop: 4, fontSize: 12 }}>
                             {error?.message}
-                        </Text>
+                        </Text>}
                     </View>
                 )}
             />
-            <Text style={{ color: "#EF4444" }}>
+            {errors.password && <Text style={{ color: "#EF4444", marginTop: 4, fontSize: 12 }}>
                 {errors.password?.message}
-            </Text>
+            </Text>}
 
         </View>
     );
@@ -104,10 +104,11 @@ const Button = () => {
     return (
         <UIButton
             isLoading={isLoading}
-            loadingText={"Đang tải..."}
+            loadingText={"Đang xử lý..."}
             onPress={handleSubmit(onSubmit)}
-            className="font-semibold text-[14px] mt-4 leading-[20px] lg:leading-[24px] outline-none focus:ring-0 text-white tracking-[0.2em] !bg-[#000] w-full h-10 lg:h-[48px] rounded-full"
-        >Đăng nhập
+            className="font-bold text-[16px] mt-2 leading-[24px] outline-none focus:ring-0 text-white tracking-[0.5px] !bg-[#1E3A8A] w-full h-12 lg:h-[48px] rounded-xl shadow-sm"
+        >
+            Đăng nhập
         </UIButton>
     )
 }

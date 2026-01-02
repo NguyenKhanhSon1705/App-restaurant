@@ -1,11 +1,12 @@
 import { LoadingRotate } from "@/common/components";
 import { formatCurrencyVN, getIdShopFromStorage } from "@/common/utils";
-import { useCheckoutTableMutation, useGetInfoCheckoutQuery } from "@/lib/services/modules/tableDish";
+import { useCheckoutTableMutation, useGetInfoCheckoutQuery, useLazyCreatePaymentUrlQuery } from "@/lib/services/modules/tableDish";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { Alert, Dimensions, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, FlatList, Modal, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Button, Surface } from "react-native-paper";
 import Toast from "react-native-toast-message";
+import { WebView, WebViewNavigation } from "react-native-webview";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -19,6 +20,10 @@ type Props = {
 const Checkout = ({ visible, onClose, tableId, tableName }: Props) => {
     const [shopId, setShopId] = useState<number | null>(null);
     const [paymentMethod, setPaymentMethod] = useState<'store' | 'vnpay'>('store');
+    const [showWebView, setShowWebView] = useState(false);
+    const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+
+    const [createPaymentUrl, { isLoading: isCreatingUrl }] = useLazyCreatePaymentUrlQuery();
 
     useEffect(() => {
         const fetchShopId = async () => {
@@ -27,13 +32,11 @@ const Checkout = ({ visible, onClose, tableId, tableName }: Props) => {
         };
         if (visible) fetchShopId();
     }, [visible]);
-    console.log(tableId, shopId)
+
     const { data: checkoutData, isLoading, isError } = useGetInfoCheckoutQuery(
         { table_id: tableId, shop_id: shopId! },
         { skip: !shopId || !visible }
     );
-    console.log("modalCheckoutVisible", checkoutData);
-
     const [checkout, { isLoading: isPaying }] = useCheckoutTableMutation();
 
     const handlePayment = () => {
@@ -48,16 +51,27 @@ const Checkout = ({ visible, onClose, tableId, tableName }: Props) => {
                         if (!shopId) return;
 
                         if (paymentMethod === 'vnpay') {
-                            // VNPay integration would go here (e.g. open webview or deeplink)
-                            // For now, mirroring web logic structure but maybe alerting not supported or mocking it
-                            Toast.show({
-                                type: "info",
-                                text1: "Thông báo",
-                                text2: "Chức năng thanh toán VNPay đang được phát triển trên mobile"
-                            });
-                            // If the API supports it, we might call it and get a URL to open
-                            // const res = await checkout({ ... }).unwrap();
-                            // if (res.data) Linking.openURL(res.data);
+                            try {
+                                const info = checkoutData?.data;
+                                console.log("hahah", info?.total_money, shopId, tableId)
+                                const res = await createPaymentUrl({
+                                    shop_id: shopId,
+                                    table_id: tableId,
+                                    moneyToPay: info?.total_money || 0,
+                                    description: `Thanh toán bàn ${tableName || info?.table_name} - ${new Date().toLocaleTimeString()}`
+                                }).unwrap();
+
+                                if (res) {
+                                    setPaymentUrl(res);
+                                    setShowWebView(true);
+                                }
+                            } catch (error) {
+                                Toast.show({
+                                    type: "error",
+                                    text1: "Lỗi",
+                                    text2: "Không thể tạo liên kết thanh toán"
+                                });
+                            }
                             return;
                         }
 
@@ -89,7 +103,60 @@ const Checkout = ({ visible, onClose, tableId, tableName }: Props) => {
         );
     };
 
+    const handleWebViewNavigationStateChange = (newNavState: WebViewNavigation) => {
+        const { url } = newNavState;
+        if (!url) return;
+
+        console.log("WebView URL:", url);
+
+        // Check for success return URL
+        if (url.includes('vnp_ResponseCode=00')) {
+            setShowWebView(false);
+            Toast.show({
+                type: "success",
+                text1: "Thành công",
+                text2: "Thanh toán VNPay thành công"
+            });
+            onClose();
+        } else if (url.includes('vnp_ResponseCode') && !url.includes('vnp_ResponseCode=00')) {
+            setShowWebView(false);
+            Toast.show({
+                type: "error",
+                text1: "Thất bại",
+                text2: "Thanh toán VNPay thất bại hoặc bị hủy"
+            });
+            // Optional: keep modal open to retry or close it
+            // setShowWebView(false); 
+        }
+    };
+
     if (!visible) return null;
+
+    if (showWebView && paymentUrl) {
+        return (
+            <Modal
+                visible={showWebView}
+                onRequestClose={() => setShowWebView(false)}
+                animationType="slide"
+            >
+                <SafeAreaView style={{ flex: 1 }}>
+                    <View style={styles.header}>
+                        <Text style={styles.headerTitle}>Thanh toán VNPay</Text>
+                        <TouchableOpacity onPress={() => setShowWebView(false)} style={styles.closeButton}>
+                            <Ionicons name="close" size={24} />
+                        </TouchableOpacity>
+                    </View>
+                    <WebView
+                        source={{ uri: paymentUrl }}
+                        onNavigationStateChange={handleWebViewNavigationStateChange}
+                        startInLoadingState
+                        renderLoading={() => <LoadingRotate />}
+                        style={{ flex: 1 }}
+                    />
+                </SafeAreaView>
+            </Modal>
+        )
+    }
 
     const info = checkoutData?.data;
 

@@ -46,13 +46,6 @@ export default function TableDishPage() {
     const { data, refetch, isLoading, isFetching } = useGetTableDishDataQuery(Number(tableId), {
         skip: !tableId,
     });
-
-    // useFocusEffect(
-    //     useCallback(() => {
-    //         refetch();
-    //     }, [refetch, tableId])
-    // );
-
     useEffect(() => {
         if (data?.data?.dish) {
             setFoods(data.data.dish);
@@ -265,7 +258,7 @@ export default function TableDishPage() {
                             style={styles.foodImage}
                         />
                         <View style={styles.foodInfo}>
-                            <Text style={styles.foodName} numberOfLines={2}>{item.dish_Name}</Text>
+                            <Text style={styles.foodName} numberOfLines={2} ellipsizeMode="tail">{item.dish_Name}</Text>
                             <Text style={styles.foodPrice}>{formatCurrencyVN(item.selling_Price)} đ</Text>
                         </View>
                         <View style={styles.quantityContainer}>
@@ -500,24 +493,34 @@ const styles = StyleSheet.create({
         fontWeight: "700",
     },
     quantityContainer: {
-        flexDirection: "column",
+        flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
-        height: 70, // Align with card height
-        paddingVertical: 2
+        backgroundColor: "#F3F4F6",
+        borderRadius: 20,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        height: 36,
     },
     qtyBtn: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: "#F3F4F6",
+        width: 28,
+        height: 28,
         alignItems: "center",
         justifyContent: "center",
+        backgroundColor: "#fff",
+        borderRadius: 14,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 1,
+        elevation: 1,
     },
     qtyText: {
-        fontSize: 16,
-        fontWeight: "600",
-        marginVertical: 4,
+        fontSize: 14,
+        fontWeight: "700",
+        color: "#1F2937",
+        minWidth: 24,
+        textAlign: 'center',
+        marginHorizontal: 8,
     },
     rowBack: {
         alignItems: 'center',
@@ -530,7 +533,7 @@ const styles = StyleSheet.create({
     },
     backBtn: {
         alignItems: 'center',
-        bottom: 0,
+        bottom: 10, // Match the foodCard marginBottom to prevent bleeding
         justifyContent: 'center',
         position: 'absolute',
         top: 0,

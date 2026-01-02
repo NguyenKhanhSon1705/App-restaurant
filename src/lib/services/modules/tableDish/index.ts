@@ -92,3 +92,6 @@ export const {
     useGetInfoCheckoutQuery,
     useCheckoutTableMutation
 } = tableApi;
+
+export * from '../vnpay';
+

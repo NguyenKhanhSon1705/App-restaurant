@@ -1,13 +1,7 @@
-'use client';
-
 import React, { type PropsWithChildren, useRef } from 'react';
-
-import { type AppStore, makeStore, persistor } from '../services/store';
-
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-
-// biome-ignore lint/complexity/noBannedTypes: <explanation>
+import { type AppStore, makeStore, persistor } from '../services/store';
 const StoreProvider: React.FC<PropsWithChildren<{}>> = ({ children, ...rest }) => {
   const storeRef = useRef<AppStore>(undefined)
   if (!storeRef.current) {

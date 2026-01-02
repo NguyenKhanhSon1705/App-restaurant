@@ -7,7 +7,8 @@ const API_SERVICE_PREFIX = {
     table: '/api/tables',
     tableDish: '/api/ordertabledish',
     dish: '/api/dish',
-    menuGroup: '/api/menugroup'
+    menuGroup: '/api/menugroup',
+    vnpay: '/api/vnpay'
 }
 
 export default API_SERVICE_PREFIX;
