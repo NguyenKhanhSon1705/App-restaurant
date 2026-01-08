@@ -4,6 +4,7 @@ import { formatCurrencyVN } from "@/common/utils";
 import { UIButtonBack } from "@/core/ui";
 import { useAbortTableDishMutation, useCreateTableDishMutation, useGetTableDishDataQuery, useUpdateTableDishMutation } from "@/lib/services/modules/tableDish";
 import { IDish, ITableDishData } from "@/lib/services/modules/tableDish/type";
+import { useTableDishWebSocket } from "@/modules/tableArea/hooks";
 import { ROUTE } from "@/routers";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -46,6 +47,24 @@ export default function TableDishPage() {
     const { data, refetch, isLoading, isFetching } = useGetTableDishDataQuery(Number(tableId), {
         skip: !tableId,
     });
+
+    // Listen for real-time dish updates via WebSocket
+    useTableDishWebSocket({
+        tableId: Number(tableId),
+        enabled: !!tableId,
+        onDishesUpdated: (dishes) => {
+            console.log('[TableDish] Received dish update from WebSocket');
+            setFoods(dishes as IDish[]);
+            Toast.show({
+                type: 'info',
+                text1: 'Cập nhật',
+                text2: 'Danh sách món ăn đã được cập nhật',
+                position: 'top',
+                visibilityTime: 2000
+            });
+        }
+    });
+
     useEffect(() => {
         if (data?.data?.dish) {
             setFoods(data.data.dish);
@@ -53,6 +72,7 @@ export default function TableDishPage() {
             setFoods([]);
         }
     }, [data?.data?.dish, isLoading, isFetching]);
+
 
     const handleDelete = (rowKey: string) => {
         Alert.alert(

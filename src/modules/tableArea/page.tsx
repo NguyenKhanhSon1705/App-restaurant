@@ -1,5 +1,6 @@
 import Loading from "@/app/loading";
 import { useGetTableAreaDataQuery } from "@/lib/services/modules";
+import { useTableWebSocket } from "@/modules/tableArea/hooks";
 import { ROUTE } from "@/routers";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -31,6 +32,17 @@ export default function TableAreaPage() {
     const [activeArea, setActiveArea] = useState<{ areaId?: number; areaName?: string }>({});
     const { data, refetch, isLoading, isFetching } = useGetTableAreaDataQuery(activeArea.areaId);
 
+    // Listen for real-time table updates via WebSocket
+    useTableWebSocket({
+        areaId: activeArea.areaId,
+        enabled: !!activeArea.areaId,
+        onTableUpdated: () => {
+            console.log('[TableArea] Received table update from WebSocket');
+            // Refetch to update the UI with latest data
+            refetch();
+        }
+    });
+
     const handleOpenDrawer = useCallback(() => {
         setDrawerVisible(true);
     }, []);
@@ -60,14 +72,9 @@ export default function TableAreaPage() {
         refetch();
     }, [refetch]);
 
+
     const renderItem = ({ item }: { item: ITableAreaData }) => {
-        // Assuming item.isActive represents availability (True = Active/Available, False = Inactive/Busy)
-        // Adjust logic if isActive means "Is currently selected" or "Is occupied".
-        // Based on original code: isActive ? "#8cc1ec" (Blue) : "#ffcccc" (Red)
-        // Let's interpret: isActive = True (Available/Blue), False (Occupied/Red)
-
         const isAvailable = !item.isActive;
-
         return (
             <Pressable
                 onPress={() => handleSelectTable(item)}

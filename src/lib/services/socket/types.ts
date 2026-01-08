@@ -15,6 +15,8 @@ export interface ServerToClientEvents {
   SubscribedToThumbnails: (data: { timestamp: string }) => void;
   // BackupSignal: (payload: MemoriaSignalEvent<IDevice | string>) => void;
   ReceiveNotification: (payload: MemoriaSignalEvent<string>) => void;
+  TableUpdated: (tables: any[]) => void;
+  DishesUpdated: (dishes: any[]) => void;
 }
 
 export interface ClientToServerEvents {

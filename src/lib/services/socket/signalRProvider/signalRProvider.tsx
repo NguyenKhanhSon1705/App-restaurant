@@ -56,7 +56,7 @@ export const SignalRProvider = ({
     const connectionOptions: signalR.IHttpConnectionOptions = {
       ...options,
       transport: signalR.HttpTransportType.WebSockets,
-      skipNegotiation: true,
+      skipNegotiation: false,
       accessTokenFactory: () => accessToken,
     };
 
