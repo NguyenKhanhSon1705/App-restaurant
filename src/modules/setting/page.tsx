@@ -69,6 +69,11 @@ const menuItems = [
     },
     {
         key: 9,
+        title: "Lịch sử hóa đơn",
+        icon: <Ionicons name="receipt-outline" size={20} color="#FF7043" />,
+    },
+    {
+        key: 10,
         title: "Settings",
         icon: <Feather name="settings" size={20} color="#9575CD" />,
     },
@@ -116,6 +121,9 @@ export default function SettingPage() {
                 break;
             case 2:
                 router.push(ROUTE.SWITCH_SHOP);
+                break;
+            case 9:
+                router.push(ROUTE.REPORT_BILL);
                 break;
             default:
                 console.log("Invalid key");

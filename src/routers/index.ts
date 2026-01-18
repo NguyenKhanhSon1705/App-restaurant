@@ -7,7 +7,8 @@ const ROUTE = {
     AREA: '/(tabs)/areas',
     SETTING: '/(tabs)/settings',
     USERPROFILE: 'userprofile/userprofile',
-    TABLE_DISH: '/tableDish/tableDish'
+    TABLE_DISH: '/tableDish/tableDish',
+    REPORT_BILL: '/report/reportBill'
 } as const
 
 export { ROUTE }

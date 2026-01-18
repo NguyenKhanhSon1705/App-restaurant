@@ -107,7 +107,7 @@ function isHydrateAction(action: Action): action is Action<typeof REHYDRATE> & {
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithInterceptor,
-  tagTypes: ['TableDish', 'TableArea'],
+  tagTypes: ['TableDish', 'TableArea', 'Report'],
   extractRehydrationInfo(action, { reducerPath }): any {
     if (isHydrateAction(action)) {
       if (action.key === 'key used with redux-persist') {

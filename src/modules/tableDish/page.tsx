@@ -10,7 +10,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    Alert,
     Dimensions,
     Image,
     Modal,
@@ -40,6 +39,15 @@ export default function TableDishPage() {
     const { tableName, tableId } = useLocalSearchParams();
     const [abortModalVisible, setAbortModalVisible] = useState(false);
     const [abortReason, setAbortReason] = useState("");
+    const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+    const [confirmModalConfig, setConfirmModalConfig] = useState<{
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        confirmText?: string;
+        cancelText?: string;
+        isDanger?: boolean;
+    }>({ title: "", message: "", onConfirm: () => { } });
     const router = useRouter();
     const [updateTableDish] = useUpdateTableDishMutation();
     const [createTableDish] = useCreateTableDishMutation();
@@ -75,23 +83,20 @@ export default function TableDishPage() {
 
 
     const handleDelete = (rowKey: string) => {
-        Alert.alert(
-            "Xóa món ăn",
-            "Bạn có chắc chắn muốn xóa món ăn này?",
-            [
-                { text: "Hủy", style: "cancel" },
-                {
-                    text: "Xóa",
-                    style: "destructive",
-                    onPress: () => {
-                        setFoods((prev: IDish[] | undefined) =>
-                            prev ? prev.filter((item) => item.id !== Number(rowKey)) : []
-                        );
-                    },
-                },
-            ],
-            { cancelable: false }
-        );
+        setConfirmModalConfig({
+            title: "Xóa món ăn",
+            message: "Bạn có chắc chắn muốn xóa món ăn này?",
+            confirmText: "Xóa",
+            cancelText: "Hủy",
+            isDanger: true,
+            onConfirm: () => {
+                setFoods((prev: IDish[] | undefined) =>
+                    prev ? prev.filter((item) => item.id !== Number(rowKey)) : []
+                );
+                setConfirmModalVisible(false);
+            },
+        });
+        setConfirmModalVisible(true);
     };
 
     const handleQuantityChange = (id: number, newQuantity: number) => {
@@ -107,71 +112,65 @@ export default function TableDishPage() {
     };
 
     const handleUpdate = () => {
-        Alert.alert(
-            "Xác nhận",
-            "Bạn có muốn cập nhật bàn này không?",
-            [
-                { text: "Không", style: "cancel" },
-                {
-                    text: "Có",
-                    onPress: async () => {
-                        try {
-                            const res = await updateTableDish({
-                                tableId: Number(tableId),
-                                listDishId: foods.map((food) => ({
-                                    key: food.id,
-                                    selling_Price: food.selling_Price,
-                                    quantity: food.quantity,
-                                    notes: "TODO",
-                                })),
-                            }).unwrap();
-                            if (res.isSuccess) {
-                                Toast.show({ type: "success", text1: "Thành công", text2: "Cập nhật thành công" });
-                            }
-                        } catch (err) {
-                            console.log("err", err);
-                            Toast.show({ type: "error", text1: "Thất bại", text2: "Cập nhật thất bại" });
-                        }
-                    },
-                },
-            ],
-            { cancelable: false }
-        );
+        setConfirmModalConfig({
+            title: "Xác nhận",
+            message: "Bạn có muốn cập nhật bàn này không?",
+            confirmText: "Có",
+            cancelText: "Không",
+            onConfirm: async () => {
+                setConfirmModalVisible(false);
+                try {
+                    const res = await updateTableDish({
+                        tableId: Number(tableId),
+                        listDishId: foods.map((food) => ({
+                            key: food.id,
+                            selling_Price: food.selling_Price,
+                            quantity: food.quantity,
+                            notes: "TODO",
+                        })),
+                    }).unwrap();
+                    if (res.isSuccess) {
+                        Toast.show({ type: "success", text1: "Thành công", text2: "Cập nhật thành công" });
+                    }
+                } catch (err) {
+                    console.log("err", err);
+                    Toast.show({ type: "error", text1: "Thất bại", text2: "Cập nhật thất bại" });
+                }
+            },
+        });
+        setConfirmModalVisible(true);
     };
 
     const handleCreate = () => {
-        Alert.alert(
-            "Xác nhận",
-            "Bạn có muốn thêm bàn này không?",
-            [
-                { text: "Không", style: "cancel" },
-                {
-                    text: "Có",
-                    onPress: async () => {
-                        try {
-                            const res = await createTableDish({
-                                tableId: Number(tableId),
-                                listDishId: foods.map((food) => ({
-                                    key: food.id,
-                                    selling_Price: food.selling_Price,
-                                    quantity: food.quantity,
-                                    notes: "food.notes",
-                                })),
-                            }).unwrap();
+        setConfirmModalConfig({
+            title: "Xác nhận",
+            message: "Bạn có muốn thêm bàn này không?",
+            confirmText: "Có",
+            cancelText: "Không",
+            onConfirm: async () => {
+                setConfirmModalVisible(false);
+                try {
+                    const res = await createTableDish({
+                        tableId: Number(tableId),
+                        listDishId: foods.map((food) => ({
+                            key: food.id,
+                            selling_Price: food.selling_Price,
+                            quantity: food.quantity,
+                            notes: "food.notes",
+                        })),
+                    }).unwrap();
 
-                            if (res.isSuccess) {
-                                Toast.show({ type: "success", text1: "Thành công", text2: "Tạo bàn thành công" });
-                                // refetch(); // Handled by tags
-                            }
-                        } catch (err) {
-                            console.log("err", err);
-                            Toast.show({ type: "error", text1: "Thất bại", text2: "Tạo bàn thất bại" });
-                        }
-                    },
-                },
-            ],
-            { cancelable: false }
-        );
+                    if (res.isSuccess) {
+                        Toast.show({ type: "success", text1: "Thành công", text2: "Tạo bàn thành công" });
+                        // refetch(); // Handled by tags
+                    }
+                } catch (err) {
+                    console.log("err", err);
+                    Toast.show({ type: "error", text1: "Thất bại", text2: "Tạo bàn thất bại" });
+                }
+            },
+        });
+        setConfirmModalVisible(true);
     };
 
     const handleChangeTable = () => {
@@ -235,6 +234,37 @@ export default function TableDishPage() {
                         <View style={styles.modalActions}>
                             <Button mode="text" onPress={() => setAbortModalVisible(false)} textColor="#6B7280">Đóng</Button>
                             <Button mode="contained" onPress={handleConfirmAbort} disabled={!abortReason.trim()} buttonColor="#EF4444">Xác nhận</Button>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Confirmation Modal */}
+            <Modal
+                visible={confirmModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setConfirmModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.confirmModalContent}>
+                        <Text style={styles.modalTitle}>{confirmModalConfig.title}</Text>
+                        <Text style={styles.modalMessage}>{confirmModalConfig.message}</Text>
+                        <View style={styles.modalActions}>
+                            <Button
+                                mode="text"
+                                onPress={() => setConfirmModalVisible(false)}
+                                textColor="#6B7280"
+                            >
+                                {confirmModalConfig.cancelText || "Hủy"}
+                            </Button>
+                            <Button
+                                mode="contained"
+                                onPress={confirmModalConfig.onConfirm}
+                                buttonColor={confirmModalConfig.isDanger ? "#EF4444" : "#22C55E"}
+                            >
+                                {confirmModalConfig.confirmText || "Xác nhận"}
+                            </Button>
                         </View>
                     </View>
                 </View>
@@ -640,5 +670,18 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "flex-end",
         gap: 8
+    },
+    confirmModalContent: {
+        backgroundColor: "#fff",
+        padding: 24,
+        borderRadius: 16,
+        width: "85%",
+        maxWidth: 400,
+    },
+    modalMessage: {
+        fontSize: 16,
+        color: "#6B7280",
+        marginBottom: 24,
+        lineHeight: 24,
     }
 });
