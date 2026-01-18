@@ -3,14 +3,14 @@ import { IUser } from "@/common/types";
 import { removeAuthFromStorage, USER_LOGOUT } from "@/common/utils";
 import { UIButtonBack } from "@/core/ui";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { useFetchCurrentUserQuery } from "@/lib/services/modules";
 import { RootState } from "@/lib/services/store";
 import { ROUTE } from "@/routers";
 import {
     AntDesign,
     Feather,
-    FontAwesome5,
     Ionicons,
-    MaterialIcons,
+    MaterialIcons
 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
@@ -38,36 +38,6 @@ const menuItems = [
         icon: <MaterialIcons name="storefront" size={20} color="#7E57C2" />,
     },
     {
-        key: 3,
-        title: "Cart",
-        icon: <Feather name="shopping-cart" size={20} color="#42A5F5" />,
-    },
-    {
-        key: 4,
-        title: "Favourite",
-        icon: <Ionicons name="heart-outline" size={20} color="#AB47BC" />,
-    },
-    {
-        key: 5,
-        title: "Notifications",
-        icon: <Ionicons name="notifications-outline" size={20} color="#FFCA28" />,
-    },
-    {
-        key: 6,
-        title: "Payment Method",
-        icon: <FontAwesome5 name="credit-card" size={20} color="#29B6F6" />,
-    },
-    {
-        key: 7,
-        title: "FAQs",
-        icon: <MaterialIcons name="question-answer" size={20} color="#EF5350" />,
-    },
-    {
-        key: 8,
-        title: "User Reviews",
-        icon: <Feather name="star" size={20} color="#00BCD4" />,
-    },
-    {
         key: 9,
         title: "Lịch sử hóa đơn",
         icon: <Ionicons name="receipt-outline" size={20} color="#FF7043" />,
@@ -78,10 +48,6 @@ const menuItems = [
         icon: <Feather name="settings" size={20} color="#9575CD" />,
     },
 ];
-
-// -----------------------------------------
-// COMPONENT ITEM REUSABLE
-// -----------------------------------------
 function MenuItem({
     icon,
     title,
@@ -113,6 +79,12 @@ export default function SettingPage() {
     const user = useAppSelector(
         (state: RootState) => state.user.user
     ) as IUser;
+
+    const { refetch, isFetching } = useFetchCurrentUserQuery(null);
+
+    const onRefresh = async () => {
+        await refetch();
+    };
 
     const handleMenuPress = (key: number) => {
         switch (key) {

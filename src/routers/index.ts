@@ -8,7 +8,8 @@ const ROUTE = {
     SETTING: '/(tabs)/settings',
     USERPROFILE: 'userprofile/userprofile',
     TABLE_DISH: '/tableDish/tableDish',
-    REPORT_BILL: '/report/reportBill'
+    REPORT_BILL: '/report/reportBill',
+    STATISTICS: '/(tabs)/statistics'
 } as const
 
 export { ROUTE }

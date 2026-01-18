@@ -53,6 +53,9 @@ const TabBar: React.FC<any> = ({ state, descriptors, navigation }) => {
                             if (route.name === 'tablearea') {
                                 router.push(ROUTE.TABLE_AREA)
                             }
+                            if (route.name === 'statistics') {
+                                router.push(ROUTE.STATISTICS)
+                            }
                         }
                     };
 
