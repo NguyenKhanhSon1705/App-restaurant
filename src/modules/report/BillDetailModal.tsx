@@ -15,7 +15,7 @@ const formatMoney = (amount: number) => {
     return amount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 };
 
-const BillDetailModal: React.FC<BillDetailModalProps> = ({ visible, billId, onClose }) => {
+const BillDetailModal: React.FC<BillDetailModalProps> = ({ visible, billId, onClose }: any) => {
     const { data, isLoading, isError } = useGetReportBillDetailQuery(
         { id: billId || "" },
         { skip: !billId || !visible }
